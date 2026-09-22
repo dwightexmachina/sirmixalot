@@ -140,7 +140,18 @@ void main() {
     expect(m.memory[program.symbols['RESULT']!].value, 1594323);
   });
 
-  for (final id in ['insertion-sort', 'bubble-sort', 'shellsort', 'heapsort']) {
+  for (final id in [
+    'insertion-sort',
+    'bubble-sort',
+    'shellsort',
+    'heapsort',
+    'quicksort',
+    'radix-sort',
+    'merge-two-way',
+    'natural-merge',
+    'selection-sort',
+    'list-insertion',
+  ]) {
     test('$id fills and sorts 100 values into non-decreasing order', () {
       final m = runProgram(id);
       final out = [for (var i = 0; i < 100; i++) m.memory[1001 + i].value];

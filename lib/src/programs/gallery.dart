@@ -1021,6 +1021,580 @@ C256    CON  256
 ''',
   ),
   GalleryProgram(
+    id: 'list-insertion',
+    section: '5.2.1',
+    title: 'List Insertion Sort',
+    description:
+        'Program L: insert each element into a sorted linked list by adjusting '
+        'links only — no data is moved during sorting. At the end it walks the '
+        'list to materialize the order into the array. O(n²) comparisons '
+        '(~61,000u here). Bars jump only during the final materialize.',
+    arrayBase: 1001,
+    arrayLength: 100,
+    source: '''
+* List insertion sort, Program L (TAOCP 5.2.1): sort via a link array,
+* then walk the list to materialize the sorted order.
+A       EQU  1000
+LINK    EQU  1300
+B       EQU  1500
+N       EQU  100
+        ORIG 3000
+START   ENT1 1
+FILL    LDA  SEED
+        MUL  MULT
+        STX  SEED
+        LDA  SEED
+        ADD  INCR
+        STA  SEED
+        MUL  C256
+        STA  A,1
+        INC1 1
+        CMP1 =N=
+        JLE  FILL
+        ENTA 0
+        STA  HEAD
+        ENT1 1
+LINS    LDA  HEAD
+        STA  P
+        ENTA 0
+        STA  PREV
+LFIND   LDA  P
+        JAZ  LINSRT
+        LD2  P
+        LDA  A,2
+        CMPA A,1
+        JG   LINSRT
+        LDA  P
+        STA  PREV
+        LDA  LINK,2
+        STA  P
+        JMP  LFIND
+LINSRT  LDA  PREV
+        JAZ  LHEAD
+        LD3  PREV
+        LDA  LINK,3
+        STA  LINK,1
+        ENTA 0,1
+        STA  LINK,3
+        JMP  LNEXT
+LHEAD   LDA  HEAD
+        STA  LINK,1
+        ENTA 0,1
+        STA  HEAD
+LNEXT   INC1 1
+        CMP1 =N=
+        JLE  LINS
+        LDA  HEAD
+        STA  P
+        ENT2 1
+LWALK   LDA  P
+        JAZ  LCOPY
+        LD3  P
+        LDA  A,3
+        STA  B,2
+        INC2 1
+        LDA  LINK,3
+        STA  P
+        JMP  LWALK
+LCOPY   ENT1 1
+LCP     LDA  B,1
+        STA  A,1
+        INC1 1
+        CMP1 =N=
+        JLE  LCP
+        HLT
+HEAD    CON  0
+P       CON  0
+PREV    CON  0
+SEED    CON  1
+MULT    CON  1664525
+INCR    CON  1013904223
+C256    CON  256
+        END  START
+''',
+  ),
+  GalleryProgram(
+    id: 'quicksort',
+    section: '5.2.2',
+    title: 'Quicksort',
+    description:
+        'Partition around a pivot (A[hi]), then recurse — here iteratively, '
+        'with an explicit (lo,hi) stack and Lomuto partition. Fast on average '
+        '(~26,000u, a third of bubble). Watch the partition sweep, then the '
+        'two halves resolve independently.',
+    arrayBase: 1001,
+    arrayLength: 100,
+    source: '''
+* Quicksort (TAOCP 5.2.2): iterative, explicit (lo,hi) stack, Lomuto.
+A       EQU  1000
+STKLO   EQU  2000
+STKHI   EQU  2300
+N       EQU  100
+        ORIG 3000
+START   ENT1 1
+FILL    LDA  SEED
+        MUL  MULT
+        STX  SEED
+        LDA  SEED
+        ADD  INCR
+        STA  SEED
+        MUL  C256
+        STA  A,1
+        INC1 1
+        CMP1 =N=
+        JLE  FILL
+        ENT5 0
+        ENTA 1
+        STA  STKLO
+        ENTA N
+        STA  STKHI
+        INC5 1
+QMAIN   J5Z  QDONE          is  stack empty  =>  done
+        DEC5 1
+        LDA  STKLO,5
+        STA  LO
+        LDA  STKHI,5
+        STA  HI
+        LDA  LO
+        CMPA HI
+        JGE  QMAIN          is  0- or 1-element range
+        LD1  HI
+        LDA  A,1
+        STA  PIVOT          is  pivot = A[hi]
+        LDA  LO
+        DECA 1
+        STA  IIDX
+        LD2  LO
+PLOOP   ENTA 0,2
+        SUB  HI
+        JANN PDONE
+        LDA  A,2
+        CMPA PIVOT
+        JG   PNEXT
+        LDA  IIDX
+        INCA 1
+        STA  IIDX
+        LD3  IIDX
+        LDA  A,3
+        STA  TMP
+        LDA  A,2
+        STA  A,3
+        LDA  TMP
+        STA  A,2           is  swap A[i], A[j]
+PNEXT   INC2 1
+        JMP  PLOOP
+PDONE   LDA  IIDX
+        INCA 1
+        STA  PIDX
+        LD3  PIDX
+        LD1  HI
+        LDA  A,3
+        STA  TMP
+        LDA  A,1
+        STA  A,3
+        LDA  TMP
+        STA  A,1           is  put pivot at its final spot
+        LDA  LO
+        STA  STKLO,5
+        LDA  PIDX
+        DECA 1
+        STA  STKHI,5
+        INC5 1             is  push (lo, p-1)
+        LDA  PIDX
+        INCA 1
+        STA  STKLO,5
+        LDA  HI
+        STA  STKHI,5
+        INC5 1             is  push (p+1, hi)
+        JMP  QMAIN
+QDONE   HLT
+LO      CON  0
+HI      CON  0
+PIVOT   CON  0
+IIDX    CON  0
+PIDX    CON  0
+TMP     CON  0
+SEED    CON  1
+MULT    CON  1664525
+INCR    CON  1013904223
+C256    CON  256
+        END  START
+''',
+  ),
+  GalleryProgram(
+    id: 'selection-sort',
+    section: '5.2.3',
+    title: 'Straight Selection Sort',
+    description:
+        'For each position, scan the rest of the array for the minimum and '
+        'swap it in. Only n−1 swaps, but n²/2 comparisons — O(n²) and slow '
+        '(~56,000u). Watch the read-cursor sweep the unsorted tail each pass.',
+    arrayBase: 1001,
+    arrayLength: 100,
+    source: '''
+* Straight selection sort (TAOCP 5.2.3).
+A       EQU  1000
+N       EQU  100
+        ORIG 3000
+START   ENT1 1
+FILL    LDA  SEED
+        MUL  MULT
+        STX  SEED
+        LDA  SEED
+        ADD  INCR
+        STA  SEED
+        MUL  C256
+        STA  A,1
+        INC1 1
+        CMP1 =N=
+        JLE  FILL
+        ENT1 1
+SILOOP  ENTA 0,1
+        DECA N
+        JANN SDONE
+        ENT3 0,1           is  min = i
+        ENT2 1,1           is  j = i+1
+SJLOOP  ENTA 0,2
+        DECA N
+        JAP  SSWAP
+        LDA  A,2
+        CMPA A,3
+        JGE  SJNEXT
+        ENT3 0,2           is  new minimum at j
+SJNEXT  INC2 1
+        JMP  SJLOOP
+SSWAP   LDA  A,1
+        STA  TMP
+        LDA  A,3
+        STA  A,1
+        LDA  TMP
+        STA  A,3           is  swap A[i], A[min]
+        INC1 1
+        JMP  SILOOP
+SDONE   HLT
+TMP     CON  0
+SEED    CON  1
+MULT    CON  1664525
+INCR    CON  1013904223
+C256    CON  256
+        END  START
+''',
+  ),
+  GalleryProgram(
+    id: 'merge-two-way',
+    section: '5.2.4',
+    title: 'Two-Way Merge Sort',
+    description:
+        'Bottom-up merge: merge adjacent runs of width 1, then 2, 4, … into a '
+        'scratch array and copy back, doubling the width each pass. Steady '
+        'O(n log n) (~29,000u). The bars resolve in ever-larger sorted blocks.',
+    arrayBase: 1001,
+    arrayLength: 100,
+    source: '''
+* Straight two-way merge sort (TAOCP 5.2.4), bottom-up with a scratch array.
+A       EQU  1000
+B       EQU  1200
+N       EQU  100
+        ORIG 3000
+START   ENT1 1
+FILL    LDA  SEED
+        MUL  MULT
+        STX  SEED
+        LDA  SEED
+        ADD  INCR
+        STA  SEED
+        MUL  C256
+        STA  A,1
+        INC1 1
+        CMP1 =N=
+        JLE  FILL
+        ENTA 1
+        STA  WID           is  run width w = 1
+MWLOOP  LDA  WID
+        CMPA =N=
+        JGE  MDONE
+        ENTA 1
+        STA  LO
+MFLOOP  LDA  LO
+        CMPA =N=
+        JG   MCOPYB
+        LDA  LO
+        ADD  WID
+        DECA 1
+        STA  MID
+        LDA  MID
+        CMPA =N=
+        JLE  MM1
+        LDA  =N=
+        STA  MID
+MM1     LDA  LO
+        ADD  WID
+        ADD  WID
+        DECA 1
+        STA  HI
+        LDA  HI
+        CMPA =N=
+        JLE  MM2
+        LDA  =N=
+        STA  HI
+MM2     LD1  LO
+        LDA  MID
+        INCA 1
+        STA  JJ
+        LD2  JJ
+        LD3  LO
+MMERGE  CMP1 MID
+        JG   MTAKEJ
+        CMP2 HI
+        JG   MTAKEI
+        LDA  A,1
+        CMPA A,2
+        JG   MTAKEJ
+MTAKEI  LDA  A,1
+        STA  B,3
+        INC1 1
+        JMP  MMSTEP
+MTAKEJ  LDA  A,2
+        STA  B,3
+        INC2 1
+MMSTEP  INC3 1
+        CMP1 MID
+        JLE  MMERGE
+        CMP2 HI
+        JLE  MMERGE
+        LDA  LO
+        ADD  WID
+        ADD  WID
+        STA  LO
+        JMP  MFLOOP
+MCOPYB  ENT1 1
+MCP     LDA  B,1
+        STA  A,1
+        INC1 1
+        CMP1 =N=
+        JLE  MCP
+        LDA  WID
+        ADD  WID
+        STA  WID           is  double the run width
+        JMP  MWLOOP
+MDONE   HLT
+WID     CON  0
+LO      CON  0
+MID     CON  0
+HI      CON  0
+JJ      CON  0
+SEED    CON  1
+MULT    CON  1664525
+INCR    CON  1013904223
+C256    CON  256
+        END  START
+''',
+  ),
+  GalleryProgram(
+    id: 'natural-merge',
+    section: '5.2.4',
+    title: 'Natural Merge Sort',
+    description:
+        'Like two-way merge, but it detects the ascending runs already present '
+        'in the data instead of using fixed widths — so partly-ordered input '
+        'sorts in fewer passes. Merges natural runs into a scratch array and '
+        'copies back until one run remains (~28,000u).',
+    arrayBase: 1001,
+    arrayLength: 100,
+    source: '''
+* Natural merge sort (TAOCP 5.2.4): merge the data's own ascending runs.
+A       EQU  1000
+B       EQU  1200
+N       EQU  100
+        ORIG 3000
+START   ENT1 1
+FILL    LDA  SEED
+        MUL  MULT
+        STX  SEED
+        LDA  SEED
+        ADD  INCR
+        STA  SEED
+        MUL  C256
+        STA  A,1
+        INC1 1
+        CMP1 =N=
+        JLE  FILL
+NPASS   ENTA 0
+        STA  RUNS
+        ENTA 1
+        STA  II
+NLOOP   LDA  II
+        CMPA =N=
+        JG   NENDP
+        LD1  II
+NE1     ENTA 0,1
+        DECA N
+        JANN NE1D
+        LDA  A+1,1
+        CMPA A,1
+        JL   NE1D
+        INC1 1
+        JMP  NE1
+NE1D    ST1  E1            is  end of the first run
+        ENTA 0,1
+        DECA N
+        JANN NSINGLE
+        INC1 1
+NE2     ENTA 0,1
+        DECA N
+        JANN NE2D
+        LDA  A+1,1
+        CMPA A,1
+        JL   NE2D
+        INC1 1
+        JMP  NE2
+NE2D    ST1  E2            is  end of the second run
+        LD1  II
+        LDA  E1
+        INCA 1
+        STA  JJ
+        LD2  JJ
+        LD3  II
+NMERGE  CMP1 E1
+        JG   NTAKEQ
+        CMP2 E2
+        JG   NTAKEP
+        LDA  A,1
+        CMPA A,2
+        JG   NTAKEQ
+NTAKEP  LDA  A,1
+        STA  B,3
+        INC1 1
+        JMP  NMSTEP
+NTAKEQ  LDA  A,2
+        STA  B,3
+        INC2 1
+NMSTEP  INC3 1
+        CMP1 E1
+        JLE  NMERGE
+        CMP2 E2
+        JLE  NMERGE
+        LDA  RUNS
+        INCA 1
+        STA  RUNS
+        LDA  E2
+        INCA 1
+        STA  II
+        JMP  NLOOP
+NSINGLE LD1  II
+NSC     LDA  A,1
+        STA  B,1
+        INC1 1
+        ENTA 0,1
+        DECA N
+        JANP NSC
+        LDA  RUNS
+        INCA 1
+        STA  RUNS
+NENDP   ENT1 1
+NCP     LDA  B,1
+        STA  A,1
+        INC1 1
+        CMP1 =N=
+        JLE  NCP
+        LDA  RUNS
+        DECA 1
+        JANP NDONE         is  one run left  =>  sorted
+        JMP  NPASS
+NDONE   HLT
+RUNS    CON  0
+II      CON  0
+E1      CON  0
+E2      CON  0
+JJ      CON  0
+SEED    CON  1
+MULT    CON  1664525
+INCR    CON  1013904223
+C256    CON  256
+        END  START
+''',
+  ),
+  GalleryProgram(
+    id: 'radix-sort',
+    section: '5.2.5',
+    title: 'Radix / Distribution Sort',
+    description:
+        'Distribution counting (TAOCP 5.2.5): count how many of each value '
+        '(0–255) occur, turn the counts into positions, then place each '
+        'element directly. No comparisons — O(n), the fastest here by far '
+        '(~11,800u). The array snaps sorted during the final placement.',
+    arrayBase: 1001,
+    arrayLength: 100,
+    source: '''
+* Distribution counting sort (TAOCP 5.2.5), values 0..255.
+A       EQU  1000
+COUNT   EQU  1200
+B       EQU  1500
+N       EQU  100
+        ORIG 3000
+START   ENT1 1
+FILL    LDA  SEED
+        MUL  MULT
+        STX  SEED
+        LDA  SEED
+        ADD  INCR
+        STA  SEED
+        MUL  C256
+        STA  A,1
+        INC1 1
+        CMP1 =N=
+        JLE  FILL
+        ENT1 0
+RZ      ENTA 0
+        STA  COUNT,1
+        INC1 1
+        ENTA 0,1
+        DECA 256
+        JAN  RZ            is  clear COUNT[0..255]
+        ENT1 1
+RC      LD2  A,1
+        LDA  COUNT,2
+        INCA 1
+        STA  COUNT,2       is  tally each value
+        INC1 1
+        CMP1 =N=
+        JLE  RC
+        ENT1 1
+RS      LDA  COUNT-1,1
+        ADD  COUNT,1
+        STA  COUNT,1       is  running sums -> end positions
+        INC1 1
+        ENTA 0,1
+        DECA 256
+        JAN  RS
+        LD1  =N=
+RD      LD2  A,1
+        LDA  COUNT,2
+        STA  POS
+        LD3  POS
+        LDA  A,1
+        STA  B,3           is  place A[i] at its counted position
+        LDA  COUNT,2
+        DECA 1
+        STA  COUNT,2
+        DEC1 1
+        J1P  RD
+        ENT1 1
+RCP     LDA  B,1
+        STA  A,1
+        INC1 1
+        CMP1 =N=
+        JLE  RCP
+        HLT
+POS     CON  0
+SEED    CON  1
+MULT    CON  1664525
+INCR    CON  1013904223
+C256    CON  256
+        END  START
+''',
+  ),
+  GalleryProgram(
     id: 'float-horner',
     section: '4.6.4',
     title: 'Floating Point — Horner’s Rule',
