@@ -81,7 +81,10 @@ class _MemoryPanelState extends State<MemoryPanel> {
                   accent = MixColors.blue;
                   rowColor = MixColors.blueSoft;
                 }
-                final isCode = c.program?.words.containsKey(addr) ?? false;
+                final program = c.program;
+                final isCode = program != null &&
+                    program.words.containsKey(addr) &&
+                    !program.dataAddresses.contains(addr);
                 return Container(
                   decoration: rowColor != null
                       ? BoxDecoration(
@@ -136,8 +139,15 @@ class _MemoryPanelState extends State<MemoryPanel> {
     );
   }
 
-  void _ensureVisible(int addr) {
-    if (!_scroll.hasClients) return;
+  void _ensureVisible(int addr, [int attempt = 0]) {
+    if (!_scroll.hasClients) {
+      // First frame: the list may not be attached yet — try again next frame.
+      if (attempt < 3 && mounted) {
+        WidgetsBinding.instance
+            .addPostFrameCallback((_) => _ensureVisible(addr, attempt + 1));
+      }
+      return;
+    }
     final pos = _scroll.position;
     final target = addr * _rowExtent;
     final top = pos.pixels;

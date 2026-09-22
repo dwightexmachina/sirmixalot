@@ -16,11 +16,15 @@ class AssembledProgram {
   /// Memory address -> 1-based source line that produced it.
   final Map<int, int> sourceLines;
 
+  /// Addresses whose words are data (CON, ALF, literals), not instructions.
+  final Set<int> dataAddresses;
+
   AssembledProgram({
     required this.words,
     required this.start,
     required this.symbols,
     required this.sourceLines,
+    required this.dataAddresses,
   });
 }
 
@@ -74,6 +78,7 @@ class _Assembler {
   final List<List<_LocalDef>> _locals = List.generate(10, (_) => []);
   final List<_Fixup> _fixups = [];
   final List<_Literal> _literals = [];
+  final Set<int> _dataAddresses = {};
   int _loc = 0;
   int _seq = 0;
   int? _start;
@@ -93,6 +98,7 @@ class _Assembler {
       start: _start!,
       symbols: _symbols,
       sourceLines: _sourceLines,
+      dataAddresses: _dataAddresses,
     );
   }
 
@@ -114,6 +120,7 @@ class _Assembler {
 
     if (op == 'ALF') {
       _defineHere(label, line);
+      _dataAddresses.add(_loc);
       _emit(_alfWord(raw, opEnd, line), line);
       return;
     }
@@ -143,6 +150,7 @@ class _Assembler {
         if (v.abs() >= MixWord.wordModulus) {
           throw MixAssemblyError('constant does not fit in a word: $v', line);
         }
+        _dataAddresses.add(_loc);
         _emit(MixWord.fromValue(v), line);
         return;
       case 'END':
@@ -253,6 +261,7 @@ class _Assembler {
         throw MixAssemblyError('literal does not fit in a word: $v', lit.line);
       }
       final addr = _loc;
+      _dataAddresses.add(_loc);
       _emit(MixWord.fromValue(v), lit.line);
       for (final ref in lit.refs) {
         _patchAddress(ref, addr, lit.line);
