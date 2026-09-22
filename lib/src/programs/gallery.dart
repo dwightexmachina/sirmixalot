@@ -1595,6 +1595,190 @@ C256    CON  256
 ''',
   ),
   GalleryProgram(
+    id: 'tape-merge-sort',
+    section: '5.4',
+    title: 'External Sort — Balanced Tape Merge',
+    description:
+        'External sorting on tapes (TAOCP 5.4): distribute length-1 runs '
+        'across two tapes, then merge pairs of runs back and forth between '
+        'two tape-pairs, doubling the run length each pass, rewinding between '
+        'passes. Tape units are chosen at run time by self-modifying the '
+        'IN/OUT/IOC instructions. Data lives on the tapes during the sort and '
+        'is read back to the array at the end. (Each tape record is one word '
+        'here, simplified from MIX’s 100-word blocks.)',
+    arrayBase: 1001,
+    arrayLength: 16,
+    source: '''
+* Balanced two-way merge sort on four tapes (TAOCP 5.4). N a power of two.
+* Tape units are selected at run time by patching the F field (STA lbl(4:4)).
+A       EQU  1000
+ABUF    EQU  1100
+BBUF    EQU  1120
+N       EQU  16
+        ORIG 3000
+START   ENT1 1
+FILL    LDA  SEED
+        MUL  MULT
+        STX  SEED
+        LDA  SEED
+        ADD  INCR
+        STA  SEED
+        MUL  C256
+        STA  A,1
+        INC1 1
+        CMP1 =N=
+        JLE  FILL
+* distribute length-1 runs alternately to tapes 0 and 1
+        ENT1 1
+        ENTA 0
+        STA  OTOG
+DIST    LDA  A,1
+        STA  WRBUF
+        LDA  OTOG
+        STA  DWR(4:4)
+DWR     OUT  WRBUF(0)
+        LDA  =1=
+        SUB  OTOG
+        STA  OTOG
+        INC1 1
+        CMP1 =N=
+        JLE  DIST
+        ENTA 1
+        STA  L
+        ENTA 0
+        STA  IU0
+        ENTA 1
+        STA  IU1
+        ENTA 2
+        STA  OU0
+        ENTA 3
+        STA  OU1
+PASS    IOC  0(0)
+        IOC  0(1)
+        IOC  0(2)
+        IOC  0(3)
+        LDA  IU0
+        STA  RDA(4:4)
+        LDA  IU1
+        STA  RDB(4:4)
+        ENTA 0
+        STA  OTOG
+        LDA  =N=
+        STA  T
+        LDA  L
+        ADD  L
+        STA  T2
+        ENTA 0
+        LDX  T
+        DIV  T2
+        STA  NP            is  number of run-pairs this pass
+        ENT4 0
+MPAIR   ENTA 0,4
+        SUB  NP
+        JANN NEXTP
+        LDA  OTOG
+        JAZ  USEO0
+        LDA  OU1
+        JMP  SETW
+USEO0   LDA  OU0
+SETW    STA  WR(4:4)
+        JMP  MERGE
+        LDA  =1=
+        SUB  OTOG
+        STA  OTOG
+        INC4 1
+        JMP  MPAIR
+NEXTP   LDA  IU0
+        STA  TMP0
+        LDA  IU1
+        STA  TMP1
+        LDA  OU0
+        STA  IU0
+        LDA  OU1
+        STA  IU1
+        LDA  TMP0
+        STA  OU0
+        LDA  TMP1
+        STA  OU1
+        LDA  L
+        ADD  L
+        STA  L
+        CMPA =N=
+        JL   PASS
+* finish: the sorted run is on IU0 -> read it back into A
+        LDA  IU0
+        STA  FRD(4:4)
+        LDA  IU0
+        STA  FIOC(4:4)
+FIOC    IOC  0(0)
+        ENT1 1
+FLOOP   NOP
+FRD     IN   A,1
+        INC1 1
+        CMP1 =N=
+        JLE  FLOOP
+        HLT
+* MERGE: merge one L-run from each input tape onto the output tape
+MERGE   STJ  MEXIT
+        ENT5 0
+RDA     IN   ABUF,5
+        INC5 1
+        ENTA 0,5
+        SUB  L
+        JAN  RDA
+        ENT5 0
+RDB     IN   BBUF,5
+        INC5 1
+        ENTA 0,5
+        SUB  L
+        JAN  RDB
+        ENT1 0
+        ENT2 0
+MMG     ENTA 0,1
+        SUB  L
+        JANN TAKEB
+        ENTA 0,2
+        SUB  L
+        JANN TAKEA
+        LDA  ABUF,1
+        CMPA BBUF,2
+        JG   TAKEB
+TAKEA   LDA  ABUF,1
+        STA  WRBUF
+        INC1 1
+        JMP  DOOUT
+TAKEB   LDA  BBUF,2
+        STA  WRBUF
+        INC2 1
+DOOUT   NOP
+WR      OUT  WRBUF(0)
+        ENTA 0,1
+        SUB  L
+        JAN  MMG
+        ENTA 0,2
+        SUB  L
+        JAN  MMG
+MEXIT   JMP  *
+L       CON  0
+IU0     CON  0
+IU1     CON  0
+OU0     CON  0
+OU1     CON  0
+OTOG    CON  0
+NP      CON  0
+T       CON  0
+T2      CON  0
+TMP0    CON  0
+TMP1    CON  0
+WRBUF   CON  0
+SEED    CON  1
+MULT    CON  1664525
+INCR    CON  1013904223
+C256    CON  256
+        END  START
+''',
+  ),
+  GalleryProgram(
     id: 'sequential-search',
     section: '6.1',
     title: 'Sequential Search',

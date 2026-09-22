@@ -60,7 +60,12 @@ class MixMachine {
 
   final Map<int, MixDevice> devices = {};
 
-  MixMachine() {
+  /// Words per tape block. MIX uses 100; a smaller value keeps tape-sorting
+  /// demos legible (the multi-pass merge algorithm is identical either way).
+  MixMachine({int tapeBlock = 1}) {
+    for (var t = 0; t < 8; t++) {
+      devices[t] = MixTape(blockSize: tapeBlock);
+    }
     devices[16] = CardReader();
     devices[17] = CardPunch();
     devices[18] = LinePrinter();
@@ -69,6 +74,7 @@ class MixMachine {
   LinePrinter get printer => devices[18] as LinePrinter;
   CardReader get cardReader => devices[16] as CardReader;
   CardPunch get cardPunch => devices[17] as CardPunch;
+  MixTape tape(int n) => devices[n] as MixTape;
 
   void loadProgram(AssembledProgram program) {
     program.words.forEach((addr, w) => memory[addr] = w);

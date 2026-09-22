@@ -163,6 +163,13 @@ void main() {
     });
   }
 
+  test('external tape merge sort produces a sorted array', () {
+    final m = runProgram('tape-merge-sort');
+    final out = [for (var i = 0; i < 16; i++) m.memory[1001 + i].value];
+    expect(out, [...out]..sort());
+    expect(out.toSet().length, greaterThan(1));
+  });
+
   for (final id in ['sequential-search', 'binary-search', 'uniform-search']) {
     test('$id finds key 73 at index 73', () {
       final program = assembleMixal(byId(id).source);

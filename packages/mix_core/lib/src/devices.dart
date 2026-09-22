@@ -24,6 +24,59 @@ abstract class MixDevice {
   void control(MixMachine machine, int m) {}
 }
 
+/// Units 0–7: magnetic tape. A sequential list of fixed-size blocks with a
+/// read/write head. MIX tapes use 100-word blocks; the size is configurable
+/// here so demos can use smaller blocks. IOC controls the head: M = 0
+/// rewinds, M < 0 skips back |M| blocks, M > 0 skips forward M blocks.
+class MixTape extends MixDevice {
+  MixTape({this.blockSize = 100});
+
+  @override
+  final int blockSize;
+
+  /// Stored blocks, each exactly [blockSize] words.
+  final List<List<MixWord>> blocks = [];
+
+  /// The read/write head, in blocks from the start.
+  int position = 0;
+
+  @override
+  void input(MixMachine machine, int address) {
+    if (position < 0 || position >= blocks.length) {
+      throw MixRuntimeError('tape read past end at block $position');
+    }
+    final block = blocks[position++];
+    for (var k = 0; k < blockSize; k++) {
+      machine.memory[address + k] = block[k];
+    }
+  }
+
+  @override
+  void output(MixMachine machine, int address) {
+    final block = [
+      for (var k = 0; k < blockSize; k++) machine.memory[address + k],
+    ];
+    if (position < blocks.length) {
+      blocks[position] = block;
+    } else {
+      while (blocks.length < position) {
+        blocks.add(List<MixWord>.filled(blockSize, MixWord.zero));
+      }
+      blocks.add(block);
+    }
+    position++;
+  }
+
+  @override
+  void control(MixMachine machine, int m) {
+    if (m == 0) {
+      position = 0;
+    } else {
+      position = (position + m).clamp(0, blocks.length);
+    }
+  }
+}
+
 /// Unit 18: prints blocks of 24 words as 120-character lines.
 class LinePrinter extends MixDevice {
   /// Marker line recorded when IOC 0(18) skips to a new page.
