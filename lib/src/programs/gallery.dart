@@ -15,9 +15,44 @@ class GalleryProgram {
   });
 
   String get label => '§$section · $title';
+
+  /// The TAOCP volume this program comes from. The leading section number is
+  /// the *chapter*, and each volume spans two chapters: Vol 1 = ch. 1–2,
+  /// Vol 2 = ch. 3–4, Vol 3 = ch. 5–6, Vol 4 = ch. 7+.
+  int get volume {
+    final chapter = int.parse(section.split('.').first);
+    if (chapter <= 2) return 1;
+    if (chapter <= 4) return 2;
+    if (chapter <= 6) return 3;
+    return 4;
+  }
 }
 
-const List<GalleryProgram> gallery = [
+/// TAOCP volume titles, for grouping the gallery by book.
+const Map<int, String> bookTitles = {
+  1: 'Fundamental Algorithms',
+  2: 'Seminumerical Algorithms',
+  3: 'Sorting and Searching',
+  4: 'Combinatorial Algorithms',
+};
+
+/// Compares dotted section numbers component-by-component (1.1 < 1.3.2 < 1.4.1).
+int _compareSections(String a, String b) {
+  final pa = a.split('.').map(int.parse).toList();
+  final pb = b.split('.').map(int.parse).toList();
+  for (var i = 0; i < pa.length && i < pb.length; i++) {
+    if (pa[i] != pb[i]) return pa[i] - pb[i];
+  }
+  return pa.length - pb.length;
+}
+
+/// The gallery programs, ordered by volume and then by section number.
+List<GalleryProgram> get gallery => [..._galleryPrograms]..sort((a, b) =>
+    a.volume != b.volume
+        ? a.volume - b.volume
+        : _compareSections(a.section, b.section));
+
+const List<GalleryProgram> _galleryPrograms = [
   GalleryProgram(
     id: 'program-m',
     section: '1.3.2',

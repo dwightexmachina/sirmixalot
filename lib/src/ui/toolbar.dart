@@ -178,20 +178,40 @@ class _ProgramPicker extends StatelessWidget {
           isExpanded: true,
           style: const TextStyle(fontSize: 12.5, color: MixColors.data),
           iconEnabledColor: MixColors.labelDim,
-          items: [
-            for (final p in gallery)
-              DropdownMenuItem(
-                value: p,
-                child: Text(p.label,
-                    maxLines: 1, overflow: TextOverflow.ellipsis),
-              ),
-          ],
+          items: _groupedItems(),
           onChanged: (p) {
             if (p != null) controller.load(p);
           },
         ),
       ),
     );
+  }
+
+  /// Program items with a non-selectable book header before each volume.
+  List<DropdownMenuItem<GalleryProgram>> _groupedItems() {
+    final items = <DropdownMenuItem<GalleryProgram>>[];
+    int? lastVolume;
+    for (final p in gallery) {
+      if (p.volume != lastVolume) {
+        lastVolume = p.volume;
+        items.add(DropdownMenuItem<GalleryProgram>(
+          enabled: false,
+          child: Padding(
+            padding: EdgeInsets.only(top: items.isEmpty ? 0 : 8, bottom: 2),
+            child: Text(
+              'VOL ${p.volume} · ${bookTitles[p.volume]?.toUpperCase() ?? ''}',
+              style: MixText.caption.copyWith(
+                  color: MixColors.amber, fontSize: 9.5),
+            ),
+          ),
+        ));
+      }
+      items.add(DropdownMenuItem<GalleryProgram>(
+        value: p,
+        child: Text(p.label, maxLines: 1, overflow: TextOverflow.ellipsis),
+      ));
+    }
+    return items;
   }
 }
 

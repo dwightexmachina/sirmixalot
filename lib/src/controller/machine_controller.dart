@@ -30,7 +30,9 @@ class MachineController extends ChangeNotifier {
   double _carry = 0;
 
   MachineController({GalleryProgram? initial})
-      : current = initial ?? gallery.first {
+      : current = initial ??
+            gallery.firstWhere((p) => p.id == 'program-m',
+                orElse: () => gallery.first) {
     load(current);
   }
 
