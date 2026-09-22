@@ -181,6 +181,61 @@ void main() {
     });
   }
 
+  int fromBig(MixMachine m, int base, int n, int r) {
+    var v = 0;
+    for (var i = 0; i < n; i++) {
+      v = v * r + m.memory[base + i].value;
+    }
+    return v;
+  }
+
+  int fromLittle(MixMachine m, int base, int n, int r) {
+    var v = 0;
+    for (var i = n - 1; i >= 0; i--) {
+      v = v * r + m.memory[base + i].value;
+    }
+    return v;
+  }
+
+  test('mp subtraction: 10^12 - 1', () {
+    final m = runProgram('mp-sub');
+    expect(fromBig(m, 1200, 4, 10000), 1000000000000 - 1);
+  });
+
+  test('mp multiplication', () {
+    final m = runProgram('mp-mul');
+    expect(fromLittle(m, 1200, 4, 10000), 12345678 * 87654321);
+  });
+
+  test('mp short division of 123456789 by 7', () {
+    final program = assembleMixal(byId('mp-div').source);
+    final m = MixMachine()..loadProgram(program);
+    m.run();
+    expect(fromBig(m, 1100, 3, 10000), 123456789 ~/ 7);
+    expect(m.memory[program.symbols['REMOUT']!].value, 123456789 % 7);
+  });
+
+  test('radix conversion of 12345 to decimal digits', () {
+    final program = assembleMixal(byId('radix-conversion').source);
+    final m = MixMachine()..loadProgram(program);
+    m.run();
+    final base = program.symbols['DIG']!;
+    final n = m.memory[program.symbols['NDIG']!].value;
+    expect([for (var i = 0; i < n; i++) m.memory[base + i].value],
+        [5, 4, 3, 2, 1]);
+  });
+
+  test('polynomial derivative of 3x^3+2x^2+5x+7', () {
+    final m = runProgram('poly-derivative');
+    expect([for (var i = 0; i < 3; i++) m.memory[1100 + i].value], [5, 4, 9]);
+  });
+
+  test('polynomial division (x^3-6x^2+11x-6)/(x-1)', () {
+    final m = runProgram('poly-division');
+    expect([for (var i = 0; i < 3; i++) m.memory[1200 + i].value], [6, -5, 1]);
+    expect(m.memory[1300].value, 0);
+  });
+
   test('maximum subroutine returns 999 at index 5', () {
     final program = assembleMixal(byId('max-subroutine').source);
     final m = MixMachine()..loadProgram(program);

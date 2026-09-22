@@ -2033,6 +2033,318 @@ C256    CON  256
 ''',
   ),
   GalleryProgram(
+    id: 'mp-sub',
+    section: '4.3.1',
+    title: 'Multiple-Precision Subtraction',
+    description:
+        'Subtracts two four-digit big integers (radix 10000, most-significant '
+        'first) digit by digit, propagating a borrow detected from the sign '
+        'of each difference. Computes 10¹² − 1 = 999,999,999,999; result at W '
+        '(1200).',
+    source: '''
+* Multiple-precision subtraction (TAOCP 4.3.1, Algorithm S). W = U - V.
+* Radix 10000, big-endian; borrow is the sign of U[i]-V[i]-borrow.
+U       EQU  1000
+V       EQU  1100
+W       EQU  1200
+NW      EQU  4
+        ORIG 3000
+START   ENTA 0
+        STA  BORROW
+        ENT1 NW-1
+SLOOP   LDA  U,1
+        SUB  V,1
+        SUB  BORROW
+        ENT3 0
+        JANN SPOS          is  difference >= 0: no borrow
+        ADD  RC            is  else add the radix and borrow
+        ENT3 1
+SPOS    STA  W,1
+        ST3  BORROW
+        DEC1 1
+        J1NN SLOOP
+        HLT
+BORROW  CON  0
+RC      CON  10000
+        ORIG U
+        CON  1
+        CON  0
+        CON  0
+        CON  0
+        ORIG V
+        CON  0
+        CON  0
+        CON  0
+        CON  1
+        END  START
+''',
+  ),
+  GalleryProgram(
+    id: 'mp-mul',
+    section: '4.3.1',
+    title: 'Multiple-Precision Multiplication',
+    description:
+        'Schoolbook long multiplication of two big integers (radix 10000, '
+        'least-significant first): each digit product plus the running column '
+        'value and carry, split with a DIV by the radix. 12,345,678 × '
+        '87,654,321; four-digit product at W (1200).',
+    source: '''
+* Multiple-precision multiplication (TAOCP 4.3.1, Algorithm M). W = U * V.
+* Radix 10000, little-endian.
+U       EQU  1000
+V       EQU  1100
+W       EQU  1200
+MM      EQU  2
+NN      EQU  2
+MPN     EQU  4
+        ORIG 3000
+START   ENT1 0
+MZ      ENTA 0
+        STA  W,1
+        INC1 1
+        ENTA 0,1
+        DECA MPN
+        JAN  MZ
+        ENT1 0
+MILOOP  ENTA 0
+        STA  CARRY
+        ENT2 0
+MJLOOP  LDA  U,1
+        MUL  V,2           is  U[i]*V[j]
+        STX  PROD
+        ENTA 0,1
+        INCA 0,2
+        STA  IDX
+        LD3  IDX
+        LDA  PROD
+        ADD  W,3
+        ADD  CARRY         is  + column + carry
+        STA  T
+        ENTA 0
+        LDX  T
+        DIV  RC
+        STX  W,3           is  digit = t mod radix
+        STA  CARRY         is  carry = t div radix
+        INC2 1
+        ENTA 0,2
+        DECA NN
+        JAN  MJLOOP
+        ENTA 0,1
+        INCA NN
+        STA  IDX
+        LD3  IDX
+        LDA  CARRY
+        STA  W,3
+        INC1 1
+        ENTA 0,1
+        DECA MM
+        JAN  MILOOP
+        HLT
+CARRY   CON  0
+PROD    CON  0
+IDX     CON  0
+T       CON  0
+RC      CON  10000
+        ORIG U
+        CON  5678
+        CON  1234
+        ORIG V
+        CON  4321
+        CON  8765
+        END  START
+''',
+  ),
+  GalleryProgram(
+    id: 'mp-div',
+    section: '4.3.1',
+    title: 'Multiple-Precision Short Division',
+    description:
+        'Divides a big integer (radix 10000, most-significant first) by a '
+        'single-digit divisor, carrying the remainder into each next digit — '
+        '123,456,789 ÷ 7. Quotient at Q (1100), remainder in REMOUT. (The '
+        'full multi-digit divisor, Algorithm D, is a larger follow-up.)',
+    source: '''
+* Multiple-precision short division (TAOCP 4.3.1): big integer / one digit.
+* Radix 10000, big-endian.
+U       EQU  1000
+Q       EQU  1100
+MW      EQU  3
+        ORIG 3000
+START   ENTA 0
+        STA  REM
+        ENT1 0
+DLOOP   LDA  REM
+        MUL  RC            is  remainder * radix ...
+        STX  T
+        LDA  T
+        ADD  U,1           is  ... + next digit
+        STA  T
+        ENTA 0
+        LDX  T
+        DIV  DD
+        STA  Q,1           is  quotient digit
+        STX  REM           is  new remainder
+        INC1 1
+        ENTA 0,1
+        DECA MW
+        JAN  DLOOP
+        LDA  REM
+        STA  REMOUT
+        HLT
+REM     CON  0
+REMOUT  CON  0
+T       CON  0
+RC      CON  10000
+DD      CON  7
+        ORIG U
+        CON  1
+        CON  2345
+        CON  6789
+        END  START
+''',
+  ),
+  GalleryProgram(
+    id: 'radix-conversion',
+    section: '4.4',
+    title: 'Radix Conversion',
+    description:
+        'Converts a binary word value to its decimal digits by repeated '
+        'division by 10, collecting remainders (least-significant digit '
+        'first). 12345 → digits 5,4,3,2,1 at DIG; the count is in NDIG.',
+    source: '''
+* Radix conversion (TAOCP 4.4): a word value to base-10 digits.
+        ORIG 3000
+START   LDA  VAL
+        STA  W
+        ENT1 0
+RCL     LDA  W
+        JAZ  RCDONE        is  value exhausted
+        STA  T
+        ENTA 0
+        LDX  T
+        DIV  TEN
+        STA  W             is  value = value / 10
+        STX  DIG,1         is  next digit = value mod 10
+        INC1 1
+        JMP  RCL
+RCDONE  ST1  NDIG
+        HLT
+VAL     CON  12345
+W       CON  0
+T       CON  0
+NDIG    CON  0
+TEN     CON  10
+DIG     CON  0
+        END  START
+''',
+  ),
+  GalleryProgram(
+    id: 'poly-derivative',
+    section: '4.6.1',
+    title: 'Polynomial Derivative',
+    description:
+        'Differentiates a polynomial stored as a coefficient array: the '
+        'derivative coefficient D[i] = (i+1)·C[i+1]. For 3x³ + 2x² + 5x + 7 '
+        'it produces 9x² + 4x + 5, with the new coefficients at D (1100).',
+    source: '''
+* Polynomial derivative (TAOCP 4.6.1). C[i] = coeff of x^i.
+C       EQU  1000
+D       EQU  1100
+DEG     EQU  3
+        ORIG 3000
+START   ENT1 0
+PDL     ENTA 0,1
+        DECA DEG
+        JANN PDDONE
+        ENTA 1,1
+        STA  T             is  multiplier (i+1)
+        LDA  C+1,1
+        MUL  T             is  D[i] = C[i+1] * (i+1)
+        STX  D,1
+        INC1 1
+        JMP  PDL
+PDDONE  HLT
+T       CON  0
+        ORIG C
+        CON  7
+        CON  5
+        CON  2
+        CON  3
+        END  START
+''',
+  ),
+  GalleryProgram(
+    id: 'poly-division',
+    section: '4.6.1',
+    title: 'Polynomial Division',
+    description:
+        'Long-divides one polynomial by a monic divisor. For (x³ − 6x² + 11x '
+        '− 6) ÷ (x − 1) it yields quotient x² − 5x + 6 (at Q) and remainder 0 '
+        '(at R), subtracting a shifted multiple of the divisor each step.',
+    source: '''
+* Polynomial long division by a monic divisor (TAOCP 4.6.1). P / DPOLY.
+C       EQU  1000
+DPOLY   EQU  1100
+Q       EQU  1200
+R       EQU  1300
+PM      EQU  3
+DD      EQU  1
+        ORIG 3000
+START   ENT1 0
+PCP     LDA  C,1
+        STA  R,1           is  remainder starts as a copy of P
+        INC1 1
+        ENTA 0,1
+        DECA PM
+        JANP PCP
+        ENT1 PM
+DVL     ENTA 0,1
+        DECA DD
+        JAN  DVDONE
+        LDA  R,1
+        STA  QCUR          is  quotient coeff (divisor is monic)
+        ENTA 0,1
+        DECA DD
+        STA  KMD
+        LD2  KMD
+        LDA  QCUR
+        STA  Q,2
+        ENT3 0
+DJ      ENTA 0,3
+        DECA DD
+        JANP DJC
+        JMP  DNEXT
+DJC     LDA  DPOLY,3
+        MUL  QCUR
+        STX  PROD
+        ENTA 0,2
+        INCA 0,3
+        STA  IDX
+        LD4  IDX
+        LDA  R,4
+        SUB  PROD          is  subtract q * divisor, shifted
+        STA  R,4
+        INC3 1
+        JMP  DJ
+DNEXT   DEC1 1
+        JMP  DVL
+DVDONE  HLT
+QCUR    CON  0
+KMD     CON  0
+PROD    CON  0
+IDX     CON  0
+        ORIG C
+        CON  -6
+        CON  11
+        CON  -6
+        CON  1
+        ORIG DPOLY
+        CON  -1
+        CON  1
+        END  START
+''',
+  ),
+  GalleryProgram(
     id: 'float-horner',
     section: '4.6.4',
     title: 'Floating Point — Horner’s Rule',
