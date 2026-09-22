@@ -335,4 +335,161 @@ ANSI    CON  0
         END  START
 ''',
   ),
+  GalleryProgram(
+    id: 'coroutine',
+    section: '1.4.2',
+    title: 'Coroutines — Producer & Consumer',
+    description:
+        'Two coroutines that hand control back and forth: A produces the '
+        'numbers 1–5 (then a 0 sentinel), B sums them. Each keeps its resume '
+        'address in a cell (ARES/BRES) and jumps to the other via an indexed '
+        'JMP — the MIX coroutine linkage. The sum, 15, ends in SUM (1001).',
+    source: '''
+* Two symmetric coroutines sharing control (spirit of TAOCP 1.4.2).
+* A produces 1..5 then a 0 sentinel; B sums them. Result 15 in SUM.
+ITEM    EQU  1000
+SUM     EQU  1001
+        ORIG 3000
+START   ENTA BSTART
+        STA  BRES         is  BRES = where B first starts
+        JMP  ASTART
+* ---- coroutine A: producer ----
+ASTART  ENT1 0
+A1      INC1 1
+        ST1  ITEM         is  hand the next value to B
+        ENTA A2
+        STA  ARES         is  remember where to resume A
+        LD5  BRES
+        JMP  0,5          is  resume B
+A2      ENTA 0,1
+        DECA 5
+        JAN  A1           is  produced fewer than 5  =>  keep going
+        ENTA 0
+        STA  ITEM         is  0 sentinel: no more values
+        ENTA A3
+        STA  ARES
+        LD5  BRES
+        JMP  0,5
+A3      HLT
+* ---- coroutine B: consumer ----
+BSTART  ENTA 0
+        STA  SUM
+B1      LDA  ITEM
+        JAZ  BDONE        is  sentinel  =>  finished
+        ADD  SUM
+        STA  SUM          is  SUM += ITEM
+        ENTA B2
+        STA  BRES         is  remember where to resume B
+        LD5  ARES
+        JMP  0,5          is  resume A
+B2      JMP  B1
+BDONE   HLT
+ARES    CON  0
+BRES    CON  0
+        END  START
+''',
+  ),
+  GalleryProgram(
+    id: 'program-a',
+    section: '1.3.3',
+    title: 'Program A — Multiply Permutations (cycle form)',
+    description:
+        'Reads a product of cycles written as text — "(ABC)(AB)" — from '
+        'memory, one MIX character at a time, and composes the cycles '
+        'left-to-right into a single permutation. The result maps each '
+        'letter, stored by character code in Q[] at 700 (A→A, B→C, C→B '
+        'for this input). A reconstruction of §1.3.3’s cycle-notation idea.',
+    source: '''
+* Program A (spirit of TAOCP 1.3.3): multiply permutations in cycle form.
+* Reads the '.'-terminated cycle string INPUT (MIX characters), composes
+* the cycles left-to-right, and leaves the product in Q[code] at QBASE.
+INPUT   EQU  500
+CHARS   EQU  600
+QBASE   EQU  700
+NBASE   EQU  800
+NW      EQU  2
+        ORIG 3000
+* ---- unpack the packed input words into one char per cell ----
+START   ENT1 0
+        ENT2 0
+UNPK    LDA  INPUT,1(1:1)
+        STA  CHARS,2
+        INC2 1
+        LDA  INPUT,1(2:2)
+        STA  CHARS,2
+        INC2 1
+        LDA  INPUT,1(3:3)
+        STA  CHARS,2
+        INC2 1
+        LDA  INPUT,1(4:4)
+        STA  CHARS,2
+        INC2 1
+        LDA  INPUT,1(5:5)
+        STA  CHARS,2
+        INC2 1
+        INC1 1
+        CMP1 =NW=
+        JL   UNPK
+* ---- Q := the identity permutation ----
+        ENT3 0
+QINIT   ENTA 0,3
+        STA  QBASE,3
+        INC3 1
+        CMP3 =56=
+        JL   QINIT
+* ---- scan the formula character by character ----
+        ENT1 0
+LOOP    LDA  CHARS,1
+        JAZ  SKIP         is  blank: ignore
+        CMPA =40=
+        JE   DONE         is  '.' : end of formula
+        CMPA =42=
+        JE   OPEN         is  '(' : begin a cycle
+        CMPA =43=
+        JE   CLOSE        is  ')' : close and apply the cycle
+* ---- a cycle symbol ----
+        LDX  HASPREV
+        JXNZ HAVEP
+        STA  FIRST        is  first symbol of this cycle
+        STA  PREV
+        ENTX 1
+        STX  HASPREV
+        JMP  SKIP
+HAVEP   LD2  PREV
+        STA  NBASE,2      is  NEXT[prev] = this symbol
+        STA  PREV
+        JMP  SKIP
+* ---- '(' : reset NEXT to identity, forget prev ----
+OPEN    ENT3 0
+OPI     ENTA 0,3
+        STA  NBASE,3
+        INC3 1
+        CMP3 =56=
+        JL   OPI
+        STZ  HASPREV
+        JMP  SKIP
+* ---- ')' : close the cycle, then Q := thisCycle o Q ----
+CLOSE   LD2  PREV
+        LDA  FIRST
+        STA  NBASE,2      is  NEXT[prev] = first (wrap the cycle)
+        ENT3 0
+APPLY   LD2  QBASE,3
+        LDA  NBASE,2      is  Q[c] := NEXT[Q[c]]
+        STA  QBASE,3
+        INC3 1
+        CMP3 =56=
+        JL   APPLY
+        JMP  SKIP
+SKIP    INC1 1
+        JMP  LOOP
+DONE    HLT
+FIRST   CON  0
+PREV    CON  0
+HASPREV CON  0
+        ORIG INPUT
+        ALF  "(ABC)"
+        ALF  "(AB)."
+        END  START
+''',
+  ),
 ];

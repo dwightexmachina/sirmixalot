@@ -45,6 +45,19 @@ void main() {
     expect(z, [4, 6, 5, 1, 3, 2]);
   });
 
+  test('coroutines sum 1..5 into SUM = 15', () {
+    final m = runProgram('coroutine');
+    expect(m.memory[1001].value, 15);
+  });
+
+  test('Program A composes (ABC)(AB): A->A, B->C, C->B', () {
+    final m = runProgram('program-a');
+    // Q at 700 indexed by MIX char code (A=1, B=2, C=3).
+    expect(m.memory[701].value, 1);
+    expect(m.memory[702].value, 3);
+    expect(m.memory[703].value, 2);
+  });
+
   test('maximum subroutine returns 999 at index 5', () {
     final program = assembleMixal(byId('max-subroutine').source);
     final m = MixMachine()..loadProgram(program);
