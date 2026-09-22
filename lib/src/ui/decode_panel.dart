@@ -3,6 +3,7 @@ import 'package:mix_core/mix_core.dart';
 
 import '../controller/machine_controller.dart';
 import '../theme.dart';
+import 'hover_card.dart';
 
 /// Field-by-field breakdown of the next instruction: ± AA I F C, its
 /// disassembly, the effective address computation, and the cycle cost.
@@ -63,11 +64,24 @@ class DecodePanel extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 12),
-        Text(disassemble(word),
-            style: MixText.mono.copyWith(
-                fontSize: 14,
-                color: MixColors.amber,
-                fontWeight: FontWeight.w700)),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: HoverCard(
+            contentBuilder: (_) => InstructionTooltipCard(
+              explanation:
+                  explainInstruction(word, machine: m, address: m.pc),
+            ),
+            child: Text(disassemble(word),
+                style: MixText.mono.copyWith(
+                    fontSize: 14,
+                    color: MixColors.amber,
+                    fontWeight: FontWeight.w700,
+                    decoration: TextDecoration.underline,
+                    decorationStyle: TextDecorationStyle.dotted,
+                    decorationColor:
+                        MixColors.amber.withValues(alpha: 0.5))),
+          ),
+        ),
         const SizedBox(height: 8),
         Text(
           usesIndex
