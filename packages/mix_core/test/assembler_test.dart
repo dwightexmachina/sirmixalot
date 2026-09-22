@@ -92,6 +92,28 @@ B       CON  L/4:1
       expect(p.words[12]!.bytes, [' ', 'M', 'I', 'X', ' '].map(code));
     });
 
+    test('data words are classified by origin (CON / ALF / literal)', () {
+      final p = assembleMixal('''
+        ORIG 100
+N       CON  231
+MSG     ALF  "HELLO"
+S       LDA  =42=
+        HLT
+        END  100
+''');
+      expect(p.dataKinds[100], DataKind.number); // CON 231
+      expect(p.dataKinds[101], DataKind.string); // ALF "HELLO"
+      // The literal =42= is placed just after END (past HLT at 104).
+      final litAddr =
+          p.dataKinds.entries.firstWhere((e) => e.value == DataKind.literal).key;
+      expect(p.words[litAddr], MixWord.fromValue(42));
+      // Instruction addresses are not data.
+      expect(p.dataKinds.containsKey(102), isFalse); // LDA
+      expect(p.dataKinds.containsKey(103), isFalse); // HLT
+      // Back-compat getter still reports all data addresses.
+      expect(p.dataAddresses, containsAll([100, 101, litAddr]));
+    });
+
     test('literals are placed after END and deduplicated', () {
       final p = assembleMixal('''
         ORIG 3000

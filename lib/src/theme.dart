@@ -18,6 +18,8 @@ abstract class MixColors {
   static const blueSoft = Color(0x2662A4DE);
   static const green = Color(0xFF7FC97A);
   static const greenSoft = Color(0x267FC97A);
+  static const stringData = Color(0xFF86C98A);
+  static const stringSoft = Color(0x1F86C98A);
   static const lampRed = Color(0xFFD4593F);
   static const lampOff = Color(0xFF38424F);
   static const paper = Color(0xFFEEF3E2);

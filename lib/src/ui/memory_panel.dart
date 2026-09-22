@@ -83,9 +83,10 @@ class _MemoryPanelState extends State<MemoryPanel> {
                   rowColor = MixColors.blueSoft;
                 }
                 final program = c.program;
+                final kind = program?.dataKinds[addr];
                 final isCode = program != null &&
                     program.words.containsKey(addr) &&
-                    !program.dataAddresses.contains(addr);
+                    kind == null;
                 return Container(
                   decoration: rowColor != null
                       ? BoxDecoration(
@@ -111,8 +112,12 @@ class _MemoryPanelState extends State<MemoryPanel> {
                       Expanded(
                         child: Align(
                           alignment: Alignment.centerLeft,
-                          child: HoverCard(
-                            contentBuilder: (_) => isCode
+                          child: _Gloss(
+                            word: word,
+                            kind: kind,
+                            isCode: isCode,
+                            accent: accent,
+                            tooltip: (_) => isCode
                                 ? InstructionTooltipCard(
                                     explanation: explainInstruction(
                                       word,
@@ -121,19 +126,6 @@ class _MemoryPanelState extends State<MemoryPanel> {
                                     ),
                                   )
                                 : DataTooltipCard(word: word),
-                            child: Text(
-                              isCode ? disassemble(word) : '= ${word.value}',
-                              overflow: TextOverflow.clip,
-                              softWrap: false,
-                              style: MixText.monoDim.copyWith(
-                                fontSize: 11.5,
-                                color: accent ?? MixColors.labelDim,
-                                decoration: TextDecoration.underline,
-                                decorationStyle: TextDecorationStyle.dotted,
-                                decorationColor: (accent ?? MixColors.labelDim)
-                                    .withValues(alpha: 0.55),
-                              ),
-                            ),
                           ),
                         ),
                       ),
@@ -175,6 +167,97 @@ class _MemoryPanelState extends State<MemoryPanel> {
     final want = (target - pos.viewportDimension / 3)
         .clamp(0.0, pos.maxScrollExtent);
     _scroll.jumpTo(want);
+  }
+}
+
+/// The gloss column of a memory row: a disassembly for instructions, a
+/// quoted string for ALF words, or `= value` for numbers — plus a small
+/// ALF/CON/LIT origin tag on data words. The value text carries the hover
+/// tooltip; the tag does not.
+class _Gloss extends StatelessWidget {
+  final MixWord word;
+  final DataKind? kind;
+  final bool isCode;
+  final Color? accent;
+  final WidgetBuilder tooltip;
+
+  const _Gloss({
+    required this.word,
+    required this.kind,
+    required this.isCode,
+    required this.accent,
+    required this.tooltip,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final String text;
+    final Color color;
+    String? tag;
+    var tagColor = MixColors.labelDim;
+
+    if (isCode) {
+      text = disassemble(word);
+      color = accent ?? MixColors.labelDim;
+    } else if (kind == DataKind.string) {
+      text = '"${word.bytes.map(mixCodeChar).join()}"';
+      color = accent ?? MixColors.stringData;
+      tag = 'ALF';
+      tagColor = MixColors.stringData;
+    } else {
+      text = '= ${word.value}';
+      color = accent ?? MixColors.labelDim;
+      tag = switch (kind) {
+        DataKind.number => 'CON',
+        DataKind.literal => 'LIT',
+        _ => null, // untouched or runtime-written memory: no origin
+      };
+    }
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Flexible(
+          child: HoverCard(
+            contentBuilder: tooltip,
+            child: Text(
+              text,
+              overflow: TextOverflow.clip,
+              softWrap: false,
+              style: MixText.monoDim.copyWith(
+                fontSize: 11.5,
+                color: color,
+                decoration: TextDecoration.underline,
+                decorationStyle: TextDecorationStyle.dotted,
+                decorationColor: color.withValues(alpha: 0.55),
+              ),
+            ),
+          ),
+        ),
+        if (tag != null) ...[
+          const SizedBox(width: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+            decoration: BoxDecoration(
+              color: tagColor == MixColors.stringData
+                  ? MixColors.stringSoft
+                  : MixColors.bezelSoft,
+              border: Border.all(color: tagColor.withValues(alpha: 0.4)),
+              borderRadius: BorderRadius.circular(3),
+            ),
+            child: Text(
+              tag,
+              style: TextStyle(
+                fontFamily: monoFamily,
+                fontSize: 8.5,
+                letterSpacing: 0.8,
+                color: tagColor,
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
   }
 }
 

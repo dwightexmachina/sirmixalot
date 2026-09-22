@@ -3,6 +3,10 @@ import 'errors.dart';
 import 'op_table.dart';
 import 'word.dart';
 
+/// The kind of value a data word holds, inferred from the directive that
+/// created it: a CON number, an ALF character string, or an =...= literal.
+enum DataKind { number, string, literal }
+
 /// The output of assembling MIXAL source.
 class AssembledProgram {
   /// Assembled words by memory address.
@@ -16,16 +20,20 @@ class AssembledProgram {
   /// Memory address -> 1-based source line that produced it.
   final Map<int, int> sourceLines;
 
-  /// Addresses whose words are data (CON, ALF, literals), not instructions.
-  final Set<int> dataAddresses;
+  /// Data-word address -> the kind of value it holds (CON/ALF/literal).
+  /// Addresses absent from this map are instructions (or untouched memory).
+  final Map<int, DataKind> dataKinds;
 
   AssembledProgram({
     required this.words,
     required this.start,
     required this.symbols,
     required this.sourceLines,
-    required this.dataAddresses,
+    required this.dataKinds,
   });
+
+  /// Addresses whose words are data (CON, ALF, literals), not instructions.
+  Set<int> get dataAddresses => dataKinds.keys.toSet();
 }
 
 /// Assembles MIXAL [source].
@@ -78,7 +86,7 @@ class _Assembler {
   final List<List<_LocalDef>> _locals = List.generate(10, (_) => []);
   final List<_Fixup> _fixups = [];
   final List<_Literal> _literals = [];
-  final Set<int> _dataAddresses = {};
+  final Map<int, DataKind> _dataKinds = {};
   int _loc = 0;
   int _seq = 0;
   int? _start;
@@ -98,7 +106,7 @@ class _Assembler {
       start: _start!,
       symbols: _symbols,
       sourceLines: _sourceLines,
-      dataAddresses: _dataAddresses,
+      dataKinds: _dataKinds,
     );
   }
 
@@ -120,7 +128,7 @@ class _Assembler {
 
     if (op == 'ALF') {
       _defineHere(label, line);
-      _dataAddresses.add(_loc);
+      _dataKinds[_loc] = DataKind.string;
       _emit(_alfWord(raw, opEnd, line), line);
       return;
     }
@@ -150,7 +158,7 @@ class _Assembler {
         if (v.abs() >= MixWord.wordModulus) {
           throw MixAssemblyError('constant does not fit in a word: $v', line);
         }
-        _dataAddresses.add(_loc);
+        _dataKinds[_loc] = DataKind.number;
         _emit(MixWord.fromValue(v), line);
         return;
       case 'END':
@@ -261,7 +269,7 @@ class _Assembler {
         throw MixAssemblyError('literal does not fit in a word: $v', lit.line);
       }
       final addr = _loc;
-      _dataAddresses.add(_loc);
+      _dataKinds[_loc] = DataKind.literal;
       _emit(MixWord.fromValue(v), lit.line);
       for (final ref in lit.refs) {
         _patchAddress(ref, addr, lit.line);
