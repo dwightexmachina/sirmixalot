@@ -15,6 +15,21 @@ class Instruction {
   int get fieldR => f % 8;
 }
 
+/// Base execution time of instruction (C, F) in u. MOVE's time depends on
+/// its F (word count); I/O interlock time is not modeled in v1.
+int instructionCost(int c, int f) {
+  if (c == 0) return 1;
+  if (c == 3) return 10;
+  if (c == 4) return 12;
+  if (c <= 2) return 2; // ADD, SUB
+  if (c == 5) return 10; // NUM, CHAR, HLT
+  if (c == 6) return 2;
+  if (c == 7) return 1 + 2 * f;
+  if (c <= 33) return 2; // loads and stores
+  if (c <= 55) return 1; // I/O control, jumps, address transfers
+  return 2; // comparisons
+}
+
 final Map<int, Map<int, String>> _byCF = _buildByCF();
 
 Map<int, Map<int, String>> _buildByCF() {

@@ -105,7 +105,7 @@ class MixMachine {
 
     var next = at + 1;
     var jumped = false;
-    var cost = _baseCost(c, f);
+    var cost = instructionCost(c, f);
     final reads = <int>[];
     final writes = <int>[];
 
@@ -419,16 +419,4 @@ class MixMachine {
     return d;
   }
 
-  int _baseCost(int c, int f) {
-    if (c == 0) return 1;
-    if (c == 3) return 10;
-    if (c == 4) return 12;
-    if (c <= 2) return 2; // ADD, SUB
-    if (c == 5) return 10; // NUM, CHAR, HLT
-    if (c == 6) return 2;
-    if (c == 7) return 1 + 2 * f;
-    if (c <= 33) return 2; // loads and stores
-    if (c <= 55) return 1; // I/O control and jumps and address transfers
-    return 2; // comparisons
-  }
 }
