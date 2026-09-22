@@ -163,6 +163,7 @@ class _ProgramPicker extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      width: 320,
       padding: const EdgeInsets.symmetric(horizontal: 10),
       decoration: BoxDecoration(
         color: MixColors.panelDeep,
@@ -174,11 +175,16 @@ class _ProgramPicker extends StatelessWidget {
           value: controller.current,
           dropdownColor: MixColors.panel,
           isDense: true,
+          isExpanded: true,
           style: const TextStyle(fontSize: 12.5, color: MixColors.data),
           iconEnabledColor: MixColors.labelDim,
           items: [
             for (final p in gallery)
-              DropdownMenuItem(value: p, child: Text(p.label)),
+              DropdownMenuItem(
+                value: p,
+                child: Text(p.label,
+                    maxLines: 1, overflow: TextOverflow.ellipsis),
+              ),
           ],
           onChanged: (p) {
             if (p != null) controller.load(p);
