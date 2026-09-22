@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'src/controller/machine_controller.dart';
 import 'src/theme.dart';
+import 'src/ui/array_view.dart';
 import 'src/ui/decode_panel.dart';
 import 'src/ui/device_panel.dart';
 import 'src/ui/memory_panel.dart';
@@ -125,11 +126,23 @@ class _MachineScreenState extends State<MachineScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-              SizedBox(
-                  height: 170, child: DeviceStrip(controller: controller)),
+              SizedBox(height: 170, child: _bottomStrip()),
             ],
           ),
         ));
+  }
+
+  /// The array bar chart for sort-style programs, otherwise the device strip.
+  Widget _bottomStrip() {
+    final program = controller.current;
+    if (program.arrayBase != null && program.arrayLength != null) {
+      return ArrayView(
+        controller: controller,
+        base: program.arrayBase!,
+        length: program.arrayLength!,
+      );
+    }
+    return DeviceStrip(controller: controller);
   }
 
   Widget _header() {

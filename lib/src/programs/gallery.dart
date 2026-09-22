@@ -6,12 +6,19 @@ class GalleryProgram {
   final String description;
   final String source;
 
+  /// For array-oriented programs (e.g. sorts), the memory region to draw as a
+  /// bar chart: first address and element count. Null hides the chart.
+  final int? arrayBase;
+  final int? arrayLength;
+
   const GalleryProgram({
     required this.id,
     required this.section,
     required this.title,
     required this.description,
     required this.source,
+    this.arrayBase,
+    this.arrayLength,
   });
 
   String get label => '§$section · $title';
@@ -716,6 +723,120 @@ E       CON  0
 BASE0   CON  3
 EXP     CON  13
 TWO     CON  2
+        END  START
+''',
+  ),
+  GalleryProgram(
+    id: 'insertion-sort',
+    section: '5.2.1',
+    title: 'Straight Insertion Sort',
+    description:
+        'Algorithm S: grow a sorted prefix by taking each element and sliding '
+        'it left past everything larger. Watch the bar chart — each pass '
+        'lifts one bar and shuffles it into place. O(n²): the u-counter '
+        'climbs fast. Sorts 16 values at 1001.',
+    arrayBase: 1001,
+    arrayLength: 16,
+    source: '''
+* Straight insertion sort (TAOCP 5.2.1, Algorithm S). Sorts A[1..N].
+A       EQU  1000
+N       EQU  16
+        ORIG 3000
+START   ENT2 2             is  j = 2
+JLOOP   LDA  A,2
+        STA  KEY           is  key = A[j]
+        ENT1 -1,2          is  i = j - 1
+ILOOP   ENTA 0,1
+        JANP INS           is  i < 1  =>  insert
+        LDA  A,1
+        CMPA KEY
+        JLE  INS           is  A[i] <= key  =>  insert
+        LDA  A,1
+        STA  A+1,1         is  slide A[i] up to A[i+1]
+        DEC1 1
+        JMP  ILOOP
+INS     LDA  KEY
+        STA  A+1,1         is  drop key into the gap
+        INC2 1
+        CMP2 =N=
+        JLE  JLOOP
+        HLT
+KEY     CON  0
+        ORIG A+1
+        CON  5
+        CON  11
+        CON  2
+        CON  16
+        CON  8
+        CON  1
+        CON  13
+        CON  4
+        CON  9
+        CON  15
+        CON  3
+        CON  10
+        CON  7
+        CON  14
+        CON  6
+        CON  12
+        END  START
+''',
+  ),
+  GalleryProgram(
+    id: 'bubble-sort',
+    section: '5.2.2',
+    title: 'Bubble Sort',
+    description:
+        'The classic exchange sort: sweep the array swapping out-of-order '
+        'neighbors, so each pass floats the largest remaining value to the '
+        'end. The bar chart shows the biggest bars marching to the right one '
+        'pass at a time. Sorts the same 16 values at 1001.',
+    arrayBase: 1001,
+    arrayLength: 16,
+    source: '''
+* Bubble sort (TAOCP 5.2.2). Sorts A[1..N] by exchanging neighbors.
+A       EQU  1000
+N       EQU  16
+        ORIG 3000
+START   ENT2 N
+        DEC2 1             is  i = N-1 passes, shrinking
+OUTER   ENTA 0,2
+        JANP DONE          is  i < 1  =>  sorted
+        ENT1 1             is  j = 1
+INNER   LDA  A,1
+        CMPA A+1,1
+        JLE  NOSWAP        is  in order, leave it
+        LDA  A,1
+        STA  T
+        LDA  A+1,1
+        STA  A,1
+        LDA  T
+        STA  A+1,1         is  swap A[j], A[j+1]
+NOSWAP  INC1 1
+        ENTA 0,1
+        DECA 0,2
+        JANP INNER         is  j <= i  =>  keep sweeping
+        DEC2 1
+        JMP  OUTER
+DONE    HLT
+T       CON  0
+        ORIG A+1
+        CON  5
+        CON  11
+        CON  2
+        CON  16
+        CON  8
+        CON  1
+        CON  13
+        CON  4
+        CON  9
+        CON  15
+        CON  3
+        CON  10
+        CON  7
+        CON  14
+        CON  6
+        CON  12
         END  START
 ''',
   ),
