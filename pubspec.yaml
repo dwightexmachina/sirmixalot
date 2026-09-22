@@ -1,0 +1,21 @@
+name: sirmixalot
+description: "A browser-based visualizer for Knuth's MIX machine (TAOCP), with runnable algorithms from the book."
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.11.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  mix_core:
+    path: packages/mix_core
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
