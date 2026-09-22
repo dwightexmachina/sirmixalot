@@ -74,6 +74,28 @@ void main() {
         closeTo(3.6, 1e-4));
   });
 
+  test('LCG matches X = (aX + c) mod 2^30 for 8 values', () {
+    final m = runProgram('lcg');
+    const a = 1664525, c = 1013904223, mod = 1 << 30;
+    var x = 1;
+    for (var i = 0; i < 8; i++) {
+      x = (a * x + c) % mod;
+      expect(m.memory[1000 + i].value, x, reason: 'value $i');
+    }
+  });
+
+  test('range technique rolls dice in 1..6 = floor(6X/m)+1', () {
+    final m = runProgram('random-range');
+    const a = 1664525, c = 1013904223, mod = 1 << 30;
+    var x = 1;
+    for (var i = 0; i < 10; i++) {
+      x = (a * x + c) % mod;
+      final roll = (6 * x) ~/ mod + 1;
+      expect(m.memory[1000 + i].value, roll, reason: 'roll $i');
+      expect(roll, inInclusiveRange(1, 6));
+    }
+  });
+
   test('maximum subroutine returns 999 at index 5', () {
     final program = assembleMixal(byId('max-subroutine').source);
     final m = MixMachine()..loadProgram(program);

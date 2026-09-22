@@ -425,6 +425,74 @@ BRES    CON  0
 ''',
   ),
   GalleryProgram(
+    id: 'lcg',
+    section: '3.2.1',
+    title: 'Linear Congruential Generator',
+    description:
+        'The workhorse pseudo-random generator: X ← (aX + c) mod m, with '
+        'm = 64⁵ (the word size). MUL leaves the low word (a·X mod m) in rX '
+        'for free, and ADD wraps mod m automatically. Writes eight values '
+        'starting at 1000.',
+    source: '''
+* Linear congruential generator (TAOCP 3.2.1): X = (aX + c) mod m, m = 64^5.
+RAND    EQU  1000
+N       EQU  8
+        ORIG 3000
+START   ENT1 0
+LOOP    LDA  SEED
+        MUL  MULT          is  rX = (a*X) mod m  (low half of the product)
+        STX  SEED
+        LDA  SEED
+        ADD  INCR          is  + c, wrapping mod m
+        STA  SEED
+        STA  RAND,1        is  save this value
+        INC1 1
+        CMP1 =N=
+        JL   LOOP
+        HLT
+SEED    CON  1
+MULT    CON  1664525
+INCR    CON  1013904223
+        END  START
+''',
+  ),
+  GalleryProgram(
+    id: 'random-range',
+    section: '3.4.2',
+    title: 'Random Integers in a Range — Dice',
+    description:
+        'Turns the raw generator into dice rolls in 1–6 using the range '
+        'technique: for a fraction U = X/m, the value ⌊kU⌋ is exactly the '
+        'high word of k·X — so MUL by 6 and read rA. Writes ten rolls '
+        'starting at 1000.',
+    source: '''
+* Random integers in a range (TAOCP 3.4.2): roll ten dice in 1..6.
+* floor(k * X / m) is just the HIGH word of k*X, left in rA by MUL.
+ROLLS   EQU  1000
+N       EQU  10
+        ORIG 3000
+START   ENT1 0
+LOOP    LDA  SEED
+        MUL  MULT          is  advance the generator...
+        STX  SEED
+        LDA  SEED
+        ADD  INCR
+        STA  SEED          is  ...SEED now holds the next value
+        MUL  SIX           is  rA = floor(6 * SEED / m)  (0..5)
+        INCA 1             is  shift to 1..6
+        STA  ROLLS,1
+        INC1 1
+        CMP1 =N=
+        JL   LOOP
+        HLT
+SEED    CON  1
+MULT    CON  1664525
+INCR    CON  1013904223
+SIX     CON  6
+        END  START
+''',
+  ),
+  GalleryProgram(
     id: 'float-horner',
     section: '4.6.4',
     title: 'Floating Point — Horner’s Rule',
