@@ -733,8 +733,8 @@ TWO     CON  2
     description:
         'Algorithm S: grow a sorted prefix by taking each element and sliding '
         'it left past everything larger. Watch the bar chart — each pass '
-        'lifts one bar and shuffles it into place. O(n²): the u-counter '
-        'climbs fast. Sorts 16 values at 1001.',
+        'lifts one bar and shuffles it into place. O(n²), but with tiny '
+        'overhead it is the cheapest of these four on just 16 values (~990u).',
     arrayBase: 1001,
     arrayLength: 16,
     source: '''
@@ -820,6 +820,188 @@ NOSWAP  INC1 1
         JMP  OUTER
 DONE    HLT
 T       CON  0
+        ORIG A+1
+        CON  5
+        CON  11
+        CON  2
+        CON  16
+        CON  8
+        CON  1
+        CON  13
+        CON  4
+        CON  9
+        CON  15
+        CON  3
+        CON  10
+        CON  7
+        CON  14
+        CON  6
+        CON  12
+        END  START
+''',
+  ),
+  GalleryProgram(
+    id: 'shellsort',
+    section: '5.2.1',
+    title: 'Shellsort',
+    description:
+        'Insertion sort with shrinking gaps (N/2, N/4, …, 1). Early passes '
+        'move elements long distances so the array is nearly sorted by the '
+        'time the gap reaches 1. Its edge over plain insertion only shows for '
+        'large n — on 16 elements the gap bookkeeping makes it a touch '
+        'costlier (~1950u). Watch the long-range hops in the bar chart.',
+    arrayBase: 1001,
+    arrayLength: 16,
+    source: '''
+* Shellsort (TAOCP 5.2.1): diminishing-increment insertion sort.
+A       EQU  1000
+N       EQU  16
+        ORIG 3000
+START   ENTA 0
+        LDX  =N=
+        DIV  TWO
+        STA  HH            is  gap h = N/2
+HLOOP   LDA  HH
+        JAZ  DONE          is  h = 0  =>  sorted
+        LD1  HH
+        INC1 1             is  i = h+1
+ILOOP   ENTA 0,1
+        DECA N
+        JAP  HNEXT         is  i > N  =>  next gap
+        LDA  A,1
+        STA  KEY
+        ENT2 0,1           is  j = i
+JLOOP   ENTA 0,2
+        SUB  HH
+        JANP INS           is  j <= h  =>  insert
+        STA  JMH
+        LD3  JMH           is  index j-h
+        LDA  A,3
+        CMPA KEY
+        JLE  INS
+        LDA  A,3
+        STA  A,2           is  A[j] = A[j-h]
+        ENT2 0,3           is  j = j-h
+        JMP  JLOOP
+INS     LDA  KEY
+        STA  A,2
+        INC1 1
+        JMP  ILOOP
+HNEXT   ENTA 0
+        LDX  HH
+        DIV  TWO
+        STA  HH            is  halve the gap
+        JMP  HLOOP
+DONE    HLT
+HH      CON  0
+KEY     CON  0
+JMH     CON  0
+TWO     CON  2
+        ORIG A+1
+        CON  5
+        CON  11
+        CON  2
+        CON  16
+        CON  8
+        CON  1
+        CON  13
+        CON  4
+        CON  9
+        CON  15
+        CON  3
+        CON  10
+        CON  7
+        CON  14
+        CON  6
+        CON  12
+        END  START
+''',
+  ),
+  GalleryProgram(
+    id: 'heapsort',
+    section: '5.2.3',
+    title: 'Heapsort — Algorithm H',
+    description:
+        'Builds a max-heap in the array, then repeatedly swaps the root '
+        '(largest) to the end and sifts the new root down; the sorted tail '
+        'grows from the right. Its guaranteed O(n log n) only pays off for '
+        'large n — on 16 elements the heap overhead makes it the most '
+        'expensive here (~2680u). Uses a SIFT subroutine (STJ linkage).',
+    arrayBase: 1001,
+    arrayLength: 16,
+    source: '''
+* Heapsort, Algorithm H (TAOCP 5.2.3): build a max-heap, then extract.
+A       EQU  1000
+N       EQU  16
+        ORIG 3000
+START   ENTA N
+        STA  HEND          is  heap size = N while building
+        ENTA 0
+        LDX  =N=
+        DIV  TWO
+        STA  SS            is  start sifting from N/2
+BUILD   LDA  SS
+        JANP PHASE2
+        LD1  SS
+        JMP  SIFT
+        LDA  SS
+        DECA 1
+        STA  SS
+        JMP  BUILD
+PHASE2  ENT4 N             is  end = N, shrinking
+SLOOP2  ENTA 0,4
+        DECA 1
+        JANP HLTX          is  end <= 1  =>  done
+        LDA  A+1
+        STA  TSWAP
+        LDA  A,4
+        STA  A+1
+        LDA  TSWAP
+        STA  A,4           is  move the max (root) to A[end]
+        ENTA 0,4
+        DECA 1
+        STA  HEND          is  shrink the heap
+        ENT1 1
+        JMP  SIFT          is  restore the heap from the root
+        DEC4 1
+        JMP  SLOOP2
+HLTX    HLT
+* --- SIFT: sift A[rI1] down within A[1..HEND] ---
+SIFT    STJ  SEXIT
+SLOOP   ENTA 0,1
+        STA  TI
+        ADD  TI
+        STA  TC            is  child = 2*i
+        LD2  TC
+        LDA  TC
+        CMPA HEND
+        JG   SEXIT         is  no children
+        LDA  TC
+        INCA 1
+        CMPA HEND
+        JG   NOCH1         is  only a left child
+        LDA  A+1,2
+        CMPA A,2
+        JLE  NOCH1
+        INC2 1             is  pick the larger child
+NOCH1   LDA  A,1
+        CMPA A,2
+        JGE  SEXIT         is  parent already >= child
+        LDA  A,1
+        STA  TSWAP
+        LDA  A,2
+        STA  A,1
+        LDA  TSWAP
+        STA  A,2           is  swap parent and child
+        ENT1 0,2
+        JMP  SLOOP
+SEXIT   JMP  *
+HEND    CON  0
+SS      CON  0
+TI      CON  0
+TC      CON  0
+TSWAP   CON  0
+TWO     CON  2
         ORIG A+1
         CON  5
         CON  11

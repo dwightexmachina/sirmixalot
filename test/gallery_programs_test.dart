@@ -140,7 +140,7 @@ void main() {
     expect(m.memory[program.symbols['RESULT']!].value, 1594323);
   });
 
-  for (final id in ['insertion-sort', 'bubble-sort']) {
+  for (final id in ['insertion-sort', 'bubble-sort', 'shellsort', 'heapsort']) {
     test('$id sorts the 16-element array ascending', () {
       final m = runProgram(id);
       final sorted = [for (var i = 0; i < 16; i++) m.memory[1001 + i].value];
