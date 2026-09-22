@@ -10,6 +10,7 @@ export 'src/char_code.dart';
 export 'src/devices.dart';
 export 'src/errors.dart';
 export 'src/explain.dart';
+export 'src/float.dart';
 export 'src/instruction.dart';
 export 'src/machine.dart';
 export 'src/op_table.dart';

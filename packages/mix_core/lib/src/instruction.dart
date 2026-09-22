@@ -19,6 +19,9 @@ class Instruction {
 /// its F (word count); I/O interlock time is not modeled in v1.
 int instructionCost(int c, int f) {
   if (c == 0) return 1;
+  // Floating-point variants (F = 6): FADD/FSUB 4u, FMUL 9u, FDIV 11u, FCMP 4u.
+  if (f == 6 && (c >= 1 && c <= 4)) return c <= 2 ? 4 : (c == 3 ? 9 : 11);
+  if (f == 6 && c >= 56) return 4; // FCMP
   if (c == 3) return 10;
   if (c == 4) return 12;
   if (c <= 2) return 2; // ADD, SUB

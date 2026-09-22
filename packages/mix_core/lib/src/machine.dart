@@ -1,6 +1,7 @@
 import 'assembler.dart';
 import 'devices.dart';
 import 'errors.dart';
+import 'float.dart';
 import 'instruction.dart';
 import 'word.dart';
 
@@ -47,6 +48,9 @@ class MixMachine {
 
   bool overflow = false;
   MixComparison comparison = MixComparison.equal;
+
+  /// Fuzz used by FCMP (a floating-point word); +0 means exact comparison.
+  MixWord floatEpsilon = MixWord.zero;
   int pc = 0;
   bool halted = false;
 
@@ -134,42 +138,47 @@ class MixMachine {
       jumped = true;
     }
 
-    void requireNoFloat() {
-      if (f == 6) {
-        throw MixRuntimeError(
-            'floating point (C=$c, F=6) is not implemented yet');
-      }
-    }
-
     if (c == 0) {
       // NOP
     } else if (c >= 1 && c <= 4) {
-      requireNoFloat();
-      final v = readMem().field(f);
-      switch (c) {
-        case 1: // ADD
-          rA = _added(rA, v.value);
-        case 2: // SUB
-          rA = _added(rA, -v.value);
-        case 3: // MUL: 10-byte product in rA:rX, both get the product sign.
-          final s = rA.sign * v.sign;
-          final p = rA.magnitude * v.magnitude;
-          rA = MixWord.fromMagnitude(s, p ~/ MixWord.wordModulus);
-          rX = MixWord.fromMagnitude(s, p % MixWord.wordModulus);
-        case 4: // DIV: rA:rX / V -> quotient rA, remainder rX.
-          if (v.magnitude == 0 || rA.magnitude >= v.magnitude) {
-            // Quotient would not fit; TAOCP leaves the registers undefined.
-            overflow = true;
-          } else {
-            final dividend =
-                rA.magnitude * MixWord.wordModulus + rX.magnitude;
-            final quotientSign = rA.sign * v.sign;
-            final remainderSign = rA.sign;
-            final q = dividend ~/ v.magnitude;
-            final r = dividend % v.magnitude;
-            rA = MixWord.fromMagnitude(quotientSign, q);
-            rX = MixWord.fromMagnitude(remainderSign, r);
-          }
+      if (f == 6) {
+        // Floating point: FADD / FSUB / FMUL / FDIV operate on whole words.
+        final vword = readMem();
+        final r = switch (c) {
+          1 => mixFloatAdd(rA, vword),
+          2 => mixFloatAdd(rA, vword, subtract: true),
+          3 => mixFloatMul(rA, vword),
+          _ => mixFloatDiv(rA, vword),
+        };
+        rA = r.word;
+        if (r.overflow) overflow = true;
+      } else {
+        final v = readMem().field(f);
+        switch (c) {
+          case 1: // ADD
+            rA = _added(rA, v.value);
+          case 2: // SUB
+            rA = _added(rA, -v.value);
+          case 3: // MUL: 10-byte product in rA:rX, both get the product sign.
+            final s = rA.sign * v.sign;
+            final p = rA.magnitude * v.magnitude;
+            rA = MixWord.fromMagnitude(s, p ~/ MixWord.wordModulus);
+            rX = MixWord.fromMagnitude(s, p % MixWord.wordModulus);
+          case 4: // DIV: rA:rX / V -> quotient rA, remainder rX.
+            if (v.magnitude == 0 || rA.magnitude >= v.magnitude) {
+              // Quotient would not fit; TAOCP leaves the registers undefined.
+              overflow = true;
+            } else {
+              final dividend =
+                  rA.magnitude * MixWord.wordModulus + rX.magnitude;
+              final quotientSign = rA.sign * v.sign;
+              final remainderSign = rA.sign;
+              final q = dividend ~/ v.magnitude;
+              final r = dividend % v.magnitude;
+              rA = MixWord.fromMagnitude(quotientSign, q);
+              rX = MixWord.fromMagnitude(remainderSign, r);
+            }
+        }
       }
     } else if (c == 5) {
       switch (f) {
@@ -334,12 +343,19 @@ class MixMachine {
           throw MixRuntimeError('invalid F=$f for C=$c at $at');
       }
     } else {
-      requireNoFloat();
-      final a = _getReg(c - 56).field(f).value;
-      final b = readMem().field(f).value;
-      comparison = a < b
-          ? MixComparison.less
-          : (a > b ? MixComparison.greater : MixComparison.equal);
+      if (f == 6) {
+        // FCMP: floating-point comparison within the fuzz [floatEpsilon].
+        final cmp = mixFloatCompare(_getReg(c - 56), readMem(), floatEpsilon);
+        comparison = cmp < 0
+            ? MixComparison.less
+            : (cmp > 0 ? MixComparison.greater : MixComparison.equal);
+      } else {
+        final a = _getReg(c - 56).field(f).value;
+        final b = readMem().field(f).value;
+        comparison = a < b
+            ? MixComparison.less
+            : (a > b ? MixComparison.greater : MixComparison.equal);
+      }
     }
 
     cycles += cost;

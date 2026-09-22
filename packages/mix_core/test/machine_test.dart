@@ -351,13 +351,13 @@ void main() {
       expect(() => m.step(), throwsA(isA<MixRuntimeError>()));
     });
 
-    test('floating point ops are explicit unimplemented errors', () {
+    test('floating point ops now execute (FADD 1.0 + 1.0 = 2.0)', () {
       final m = MixMachine();
+      m.rA = mixFloatFromDouble(1.0).word;
+      m.memory[10] = mixFloatFromDouble(1.0).word;
       m.memory[0] = instr(10, 0, 6, 1); // FADD
-      expect(
-          () => m.step(),
-          throwsA(isA<MixRuntimeError>()
-              .having((e) => e.message, 'message', contains('floating'))));
+      m.step();
+      expect(mixFloatValue(m.rA), closeTo(2.0, 1e-9));
     });
   });
 }

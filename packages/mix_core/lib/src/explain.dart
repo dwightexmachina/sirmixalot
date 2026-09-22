@@ -188,8 +188,10 @@ InstructionExplanation explainInstruction(
         name = add ? 'floating add' : 'floating subtract';
         fMeaning = 'selects the floating-point variant';
         body = 'The floating-point variant of ${add ? 'ADD' : 'SUB'} '
-            '(TAOCP 4.2). Not implemented in this simulator — executing it '
-            'stops with an error.';
+            '(TAOCP 4.2): reads the word at $mText as a MIX floating-point '
+            'number and ${add ? 'adds it to' : 'subtracts it from'} rA, '
+            'normalizing and rounding the result. Exponent overflow lights '
+            'the overflow lamp.';
       } else {
         name = add ? 'add' : 'subtract';
         fMeaning = 'field ($l:$r)';
@@ -219,7 +221,8 @@ InstructionExplanation explainInstruction(
       if (f == 6) {
         name = 'floating multiply';
         fMeaning = 'selects the floating-point variant';
-        body = 'Floating-point multiply (TAOCP 4.2); not implemented here.';
+        body = 'Multiplies rA by the MIX floating-point number at $mText '
+            '(TAOCP 4.2), leaving the normalized product in rA.';
       } else {
         name = 'multiply';
         fMeaning = 'field ($l:$r)';
@@ -248,7 +251,9 @@ InstructionExplanation explainInstruction(
       if (f == 6) {
         name = 'floating divide';
         fMeaning = 'selects the floating-point variant';
-        body = 'Floating-point divide (TAOCP 4.2); not implemented here.';
+        body = 'Divides rA by the MIX floating-point number at $mText '
+            '(TAOCP 4.2), leaving the normalized quotient in rA. Division by '
+            'zero lights the overflow lamp.';
       } else {
         name = 'divide';
         fMeaning = 'field ($l:$r)';
@@ -629,7 +634,9 @@ InstructionExplanation explainInstruction(
       if (f == 6) {
         name = 'floating compare';
         fMeaning = 'selects the floating-point variant';
-        body = 'Floating-point compare (TAOCP 4.2); not implemented here.';
+        body = 'Compares $reg with the MIX floating-point number at $mText '
+            '(TAOCP 4.2) and sets the L/E/G indicator. Numbers within the '
+            'floating fuzz count as equal.';
       } else {
         name = 'compare $reg';
         fMeaning = 'field ($l:$r)';
