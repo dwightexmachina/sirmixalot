@@ -731,18 +731,31 @@ TWO     CON  2
     section: '5.2.1',
     title: 'Straight Insertion Sort',
     description:
-        'Algorithm S: grow a sorted prefix by taking each element and sliding '
-        'it left past everything larger. Watch the bar chart — each pass '
-        'lifts one bar and shuffles it into place. O(n²), but with tiny '
-        'overhead it is the cheapest of these four on just 16 values (~990u).',
+        'Algorithm S: grow a sorted prefix by sliding each element left past '
+        'everything larger. Fills its own 100 random values, then sorts. '
+        'O(n²) — about 35,000u here: better than bubble, but the shifting '
+        'work grows quadratically. Watch the sorted region spread from the '
+        'left.',
     arrayBase: 1001,
-    arrayLength: 16,
+    arrayLength: 100,
     source: '''
 * Straight insertion sort (TAOCP 5.2.1, Algorithm S). Sorts A[1..N].
 A       EQU  1000
-N       EQU  16
+N       EQU  100
         ORIG 3000
-START   ENT2 2             is  j = 2
+START   ENT1 1
+FILL    LDA  SEED
+        MUL  MULT
+        STX  SEED
+        LDA  SEED
+        ADD  INCR
+        STA  SEED
+        MUL  C256          is  random height 0..255
+        STA  A,1
+        INC1 1
+        CMP1 =N=
+        JLE  FILL
+        ENT2 2             is  j = 2
 JLOOP   LDA  A,2
         STA  KEY           is  key = A[j]
         ENT1 -1,2          is  i = j - 1
@@ -762,23 +775,10 @@ INS     LDA  KEY
         JLE  JLOOP
         HLT
 KEY     CON  0
-        ORIG A+1
-        CON  5
-        CON  11
-        CON  2
-        CON  16
-        CON  8
-        CON  1
-        CON  13
-        CON  4
-        CON  9
-        CON  15
-        CON  3
-        CON  10
-        CON  7
-        CON  14
-        CON  6
-        CON  12
+SEED    CON  1
+MULT    CON  1664525
+INCR    CON  1013904223
+C256    CON  256
         END  START
 ''',
   ),
@@ -788,17 +788,30 @@ KEY     CON  0
     title: 'Bubble Sort',
     description:
         'The classic exchange sort: sweep the array swapping out-of-order '
-        'neighbors, so each pass floats the largest remaining value to the '
-        'end. The bar chart shows the biggest bars marching to the right one '
-        'pass at a time. Sorts the same 16 values at 1001.',
+        'neighbors, floating the largest remaining value to the end each '
+        'pass. Fills its own 100 random values, then sorts. The slowest here '
+        'by far (~76,000u — about 3× Shellsort): pure O(n²) with a swap-heavy '
+        'inner loop. Watch the big bars march right, one pass at a time.',
     arrayBase: 1001,
-    arrayLength: 16,
+    arrayLength: 100,
     source: '''
 * Bubble sort (TAOCP 5.2.2). Sorts A[1..N] by exchanging neighbors.
 A       EQU  1000
-N       EQU  16
+N       EQU  100
         ORIG 3000
-START   ENT2 N
+START   ENT1 1
+FILL    LDA  SEED
+        MUL  MULT
+        STX  SEED
+        LDA  SEED
+        ADD  INCR
+        STA  SEED
+        MUL  C256          is  random height 0..255
+        STA  A,1
+        INC1 1
+        CMP1 =N=
+        JLE  FILL
+        ENT2 N
         DEC2 1             is  i = N-1 passes, shrinking
 OUTER   ENTA 0,2
         JANP DONE          is  i < 1  =>  sorted
@@ -820,23 +833,10 @@ NOSWAP  INC1 1
         JMP  OUTER
 DONE    HLT
 T       CON  0
-        ORIG A+1
-        CON  5
-        CON  11
-        CON  2
-        CON  16
-        CON  8
-        CON  1
-        CON  13
-        CON  4
-        CON  9
-        CON  15
-        CON  3
-        CON  10
-        CON  7
-        CON  14
-        CON  6
-        CON  12
+SEED    CON  1
+MULT    CON  1664525
+INCR    CON  1013904223
+C256    CON  256
         END  START
 ''',
   ),
@@ -847,17 +847,29 @@ T       CON  0
     description:
         'Insertion sort with shrinking gaps (N/2, N/4, …, 1). Early passes '
         'move elements long distances so the array is nearly sorted by the '
-        'time the gap reaches 1. Its edge over plain insertion only shows for '
-        'large n — on 16 elements the gap bookkeeping makes it a touch '
-        'costlier (~1950u). Watch the long-range hops in the bar chart.',
+        'time the gap reaches 1. Fills its own 100 random values, then sorts '
+        '— the fastest of the four here (~25,000u, a third of bubble). Watch '
+        'the long-range hops early, then fine cleanup at gap 1.',
     arrayBase: 1001,
-    arrayLength: 16,
+    arrayLength: 100,
     source: '''
 * Shellsort (TAOCP 5.2.1): diminishing-increment insertion sort.
 A       EQU  1000
-N       EQU  16
+N       EQU  100
         ORIG 3000
-START   ENTA 0
+START   ENT1 1
+FILL    LDA  SEED
+        MUL  MULT
+        STX  SEED
+        LDA  SEED
+        ADD  INCR
+        STA  SEED
+        MUL  C256          is  random height 0..255
+        STA  A,1
+        INC1 1
+        CMP1 =N=
+        JLE  FILL
+        ENTA 0
         LDX  =N=
         DIV  TWO
         STA  HH            is  gap h = N/2
@@ -897,23 +909,10 @@ HH      CON  0
 KEY     CON  0
 JMH     CON  0
 TWO     CON  2
-        ORIG A+1
-        CON  5
-        CON  11
-        CON  2
-        CON  16
-        CON  8
-        CON  1
-        CON  13
-        CON  4
-        CON  9
-        CON  15
-        CON  3
-        CON  10
-        CON  7
-        CON  14
-        CON  6
-        CON  12
+SEED    CON  1
+MULT    CON  1664525
+INCR    CON  1013904223
+C256    CON  256
         END  START
 ''',
   ),
@@ -924,17 +923,29 @@ TWO     CON  2
     description:
         'Builds a max-heap in the array, then repeatedly swaps the root '
         '(largest) to the end and sifts the new root down; the sorted tail '
-        'grows from the right. Its guaranteed O(n log n) only pays off for '
-        'large n — on 16 elements the heap overhead makes it the most '
-        'expensive here (~2680u). Uses a SIFT subroutine (STJ linkage).',
+        'grows from the right. Fills its own 100 random values, then sorts. '
+        'Guaranteed O(n log n) (~31,000u here — comfortably beats bubble’s '
+        '76,000u). Uses a SIFT subroutine via STJ linkage.',
     arrayBase: 1001,
-    arrayLength: 16,
+    arrayLength: 100,
     source: '''
 * Heapsort, Algorithm H (TAOCP 5.2.3): build a max-heap, then extract.
 A       EQU  1000
-N       EQU  16
+N       EQU  100
         ORIG 3000
-START   ENTA N
+START   ENT1 1
+FILL    LDA  SEED
+        MUL  MULT
+        STX  SEED
+        LDA  SEED
+        ADD  INCR
+        STA  SEED
+        MUL  C256          is  random height 0..255
+        STA  A,1
+        INC1 1
+        CMP1 =N=
+        JLE  FILL
+        ENTA N
         STA  HEND          is  heap size = N while building
         ENTA 0
         LDX  =N=
@@ -1002,23 +1013,10 @@ TI      CON  0
 TC      CON  0
 TSWAP   CON  0
 TWO     CON  2
-        ORIG A+1
-        CON  5
-        CON  11
-        CON  2
-        CON  16
-        CON  8
-        CON  1
-        CON  13
-        CON  4
-        CON  9
-        CON  15
-        CON  3
-        CON  10
-        CON  7
-        CON  14
-        CON  6
-        CON  12
+SEED    CON  1
+MULT    CON  1664525
+INCR    CON  1013904223
+C256    CON  256
         END  START
 ''',
   ),

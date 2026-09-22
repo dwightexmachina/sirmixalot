@@ -30,6 +30,7 @@ class ArrayView extends StatelessWidget {
       if (v > maxVal) maxVal = v;
     }
 
+    final showLabels = length <= 24;
     return ConsolePanel(
       title: 'Array',
       trailing: Text('$length words @ $base', style: MixText.caption),
@@ -48,6 +49,7 @@ class ArrayView extends StatelessWidget {
                         : MixColors.amber),
                 emphatic:
                     writes.contains(base + k) || reads.contains(base + k),
+                showLabel: showLabels,
               ),
             ),
         ],
@@ -61,33 +63,37 @@ class _Bar extends StatelessWidget {
   final double fraction;
   final Color color;
   final bool emphatic;
+  final bool showLabel;
 
   const _Bar({
     required this.value,
     required this.fraction,
     required this.color,
     required this.emphatic,
+    required this.showLabel,
   });
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 1.5),
+      padding: EdgeInsets.symmetric(horizontal: showLabel ? 1.5 : 0.6),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          Text(
-            '$value',
-            maxLines: 1,
-            overflow: TextOverflow.clip,
-            softWrap: false,
-            style: TextStyle(
-              fontFamily: monoFamily,
-              fontSize: 8.5,
-              color: emphatic ? color : MixColors.labelDim,
+          if (showLabel) ...[
+            Text(
+              '$value',
+              maxLines: 1,
+              overflow: TextOverflow.clip,
+              softWrap: false,
+              style: TextStyle(
+                fontFamily: monoFamily,
+                fontSize: 8.5,
+                color: emphatic ? color : MixColors.labelDim,
+              ),
             ),
-          ),
-          const SizedBox(height: 2),
+            const SizedBox(height: 2),
+          ],
           Expanded(
             child: FractionallySizedBox(
               heightFactor: fraction.clamp(0.02, 1.0),

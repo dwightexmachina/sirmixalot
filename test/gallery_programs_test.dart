@@ -141,11 +141,14 @@ void main() {
   });
 
   for (final id in ['insertion-sort', 'bubble-sort', 'shellsort', 'heapsort']) {
-    test('$id sorts the 16-element array ascending', () {
+    test('$id fills and sorts 100 values into non-decreasing order', () {
       final m = runProgram(id);
-      final sorted = [for (var i = 0; i < 16; i++) m.memory[1001 + i].value];
-      expect(sorted, List<int>.generate(16, (i) => i + 1),
-          reason: '$id result');
+      final out = [for (var i = 0; i < 100; i++) m.memory[1001 + i].value];
+      for (var i = 1; i < out.length; i++) {
+        expect(out[i] >= out[i - 1], isTrue, reason: '$id at $i');
+      }
+      // The fill really produced a spread of values (not all identical).
+      expect(out.toSet().length, greaterThan(1), reason: '$id filled');
     });
   }
 
