@@ -1,11 +1,13 @@
 import 'char_code.dart';
 import 'errors.dart';
+import 'float.dart';
 import 'op_table.dart';
 import 'word.dart';
 
 /// The kind of value a data word holds, inferred from the directive that
-/// created it: a CON number, an ALF character string, or an =...= literal.
-enum DataKind { number, string, literal }
+/// created it: a CON number, a CON floating-point value, an ALF character
+/// string, or an =...= literal.
+enum DataKind { number, string, literal, float }
 
 /// The output of assembling MIXAL source.
 class AssembledProgram {
@@ -74,6 +76,7 @@ class _Literal {
 }
 
 final _symbolPattern = RegExp(r'^[A-Za-z0-9]*[A-Za-z][A-Za-z0-9]*$');
+final _floatLiteral = RegExp(r'^[+-]?\d+\.\d+$');
 final _alnum = RegExp(r'[A-Za-z0-9]');
 
 class _Assembler {
@@ -154,6 +157,13 @@ class _Assembler {
         return;
       case 'CON':
         _defineHere(label, line);
+        // A decimal-point literal (e.g. 1.5, -3.25) becomes a MIX floating
+        // point word; anything else is an ordinary integer expression.
+        if (_floatLiteral.hasMatch(operand)) {
+          _dataKinds[_loc] = DataKind.float;
+          _emit(mixFloatFromDouble(double.parse(operand)).word, line);
+          return;
+        }
         final v = _wValue(operand, line);
         if (v.abs() >= MixWord.wordModulus) {
           throw MixAssemblyError('constant does not fit in a word: $v', line);

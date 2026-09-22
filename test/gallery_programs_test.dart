@@ -58,6 +58,22 @@ void main() {
     expect(m.memory[703].value, 2);
   });
 
+  test('Horner evaluates 2x^3-3x^2+5 at x=2 to 9.0', () {
+    final program = assembleMixal(byId('float-horner').source);
+    final m = MixMachine()..loadProgram(program);
+    m.run();
+    expect(mixFloatValue(m.memory[program.symbols['RESULT']!]),
+        closeTo(9.0, 1e-4));
+  });
+
+  test('float average of 1.5..6.0 is 3.6', () {
+    final program = assembleMixal(byId('float-average').source);
+    final m = MixMachine()..loadProgram(program);
+    m.run();
+    expect(mixFloatValue(m.memory[program.symbols['RESULT']!]),
+        closeTo(3.6, 1e-4));
+  });
+
   test('maximum subroutine returns 999 at index 5', () {
     final program = assembleMixal(byId('max-subroutine').source);
     final m = MixMachine()..loadProgram(program);

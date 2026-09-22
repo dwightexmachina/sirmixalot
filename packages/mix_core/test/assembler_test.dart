@@ -64,6 +64,22 @@ B       CON  L/4:1
       expect(p.symbols['A'], 1010);
     });
 
+    test('CON with a decimal point assembles a floating-point word', () {
+      final p = assembleMixal('''
+        ORIG 100
+A       CON  1.5
+B       CON  -3.25
+C       CON  231
+        END  100
+''');
+      expect(p.dataKinds[100], DataKind.float);
+      expect(p.dataKinds[101], DataKind.float);
+      expect(p.dataKinds[102], DataKind.number); // plain integer, unchanged
+      expect(mixFloatValue(p.words[100]!), closeTo(1.5, 1e-9));
+      expect(mixFloatValue(p.words[101]!), closeTo(-3.25, 1e-9));
+      expect(p.words[102]!.value, 231);
+    });
+
     test('default fields: STJ gets (0:2), LDA gets (0:5)', () {
       final p = assembleMixal('''
         ORIG 100

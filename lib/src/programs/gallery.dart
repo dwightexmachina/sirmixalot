@@ -390,6 +390,70 @@ BRES    CON  0
 ''',
   ),
   GalleryProgram(
+    id: 'float-horner',
+    section: '4.6.4',
+    title: 'Floating Point — Horner’s Rule',
+    description:
+        'Evaluates the polynomial 2x³ − 3x² + 5 at x = 2 by Horner’s method, '
+        'using the floating-point instructions FMUL and FADD: start with the '
+        'top coefficient and repeatedly multiply by x and add the next '
+        'coefficient. The answer, 9.0, ends in RESULT.',
+    source: '''
+* Horner's rule with floating point (TAOCP 4.6.4 idea).
+* p(x) = 2x^3 - 3x^2 + 0x + 5, evaluated at x = 2.  Result 9.0 in RESULT.
+N       EQU  3
+        ORIG 3000
+START   LDA  COEF          is  r = leading coefficient
+        ENT1 1
+LOOP    FMUL X             is  r = r * x
+        FADD COEF,1        is  r = r + next coefficient
+        INC1 1
+        CMP1 =N=
+        JLE  LOOP
+        STA  RESULT
+        HLT
+X       CON  2.0
+COEF    CON  2.0
+        CON  -3.0
+        CON  0.0
+        CON  5.0
+RESULT  CON  0.0
+        END  START
+''',
+  ),
+  GalleryProgram(
+    id: 'float-average',
+    section: '4.2.1',
+    title: 'Floating Point — Average',
+    description:
+        'Sums five floating-point numbers with FADD, then divides by the '
+        'count with FDIV. The mean of 1.5, 2.5, 3.5, 4.5, 6.0 is 3.6, left '
+        'in RESULT — a tour of the floating-point add and divide.',
+    source: '''
+* Floating-point average of N numbers (uses FADD and FDIV).
+N       EQU  5
+        ORIG 3000
+START   LDA  ZERO          is  running sum = 0.0
+        ENT1 0
+LOOP    FADD DATA,1        is  sum += DATA[i]
+        INC1 1
+        CMP1 =N=
+        JL   LOOP
+        FDIV COUNT         is  sum / N
+        STA  RESULT
+        HLT
+ZERO    CON  0.0
+DATA    CON  1.5
+        CON  2.5
+        CON  3.5
+        CON  4.5
+        CON  6.0
+COUNT   CON  5.0
+RESULT  CON  0.0
+        END  START
+''',
+  ),
+  GalleryProgram(
     id: 'program-a',
     section: '1.3.3',
     title: 'Program A — Multiply Permutations (cycle form)',

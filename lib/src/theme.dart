@@ -29,6 +29,15 @@ abstract class MixColors {
 
 const String monoFamily = 'JetBrains Mono';
 
+/// Formats a MIX float value compactly: 9.0 -> "9", 3.6 -> "3.6".
+String formatMixFloat(double v) {
+  if (v == 0) return '0';
+  final s = v.toStringAsPrecision(7);
+  if (s.contains('e') || s.contains('E')) return s;
+  if (!s.contains('.')) return s;
+  return s.replaceAll(RegExp(r'0+$'), '').replaceAll(RegExp(r'\.$'), '');
+}
+
 abstract class MixText {
   static const mono = TextStyle(
     fontFamily: monoFamily,

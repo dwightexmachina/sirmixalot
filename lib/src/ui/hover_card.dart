@@ -315,6 +315,7 @@ class DataTooltipCard extends StatelessWidget {
           const SizedBox(height: 8),
           _row('decimal', '${word.value}'),
           _row('characters', '"$chars"'),
+          _row('as float', formatMixFloat(mixFloatValue(word))),
           _row('as instruction', disassemble(word)),
         ],
       ),

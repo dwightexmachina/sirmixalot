@@ -204,6 +204,10 @@ class _Gloss extends StatelessWidget {
       color = accent ?? MixColors.stringData;
       tag = 'ALF';
       tagColor = MixColors.stringData;
+    } else if (kind == DataKind.float) {
+      text = '≈ ${formatMixFloat(mixFloatValue(word))}';
+      color = accent ?? MixColors.labelDim;
+      tag = 'FLT';
     } else {
       text = '= ${word.value}';
       color = accent ?? MixColors.labelDim;
