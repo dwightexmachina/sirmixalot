@@ -96,6 +96,50 @@ void main() {
     }
   });
 
+  test('shuffle produces the Fisher-Yates permutation for the seed', () {
+    final m = runProgram('shuffle');
+    const a = 1664525, c = 1013904223, mod = 1 << 30;
+    final arr = List.generate(9, (i) => i);
+    var x = 1;
+    for (var j = 8; j >= 2; j--) {
+      x = (a * x + c) % mod;
+      final k = (x * j) ~/ mod + 1;
+      final t = arr[j];
+      arr[j] = arr[k];
+      arr[k] = t;
+    }
+    for (var i = 1; i <= 8; i++) {
+      expect(m.memory[1000 + i].value, arr[i], reason: 'A[$i]');
+    }
+    // Still a permutation of 1..8.
+    expect({for (var i = 1; i <= 8; i++) m.memory[1000 + i].value},
+        {1, 2, 3, 4, 5, 6, 7, 8});
+  });
+
+  test('multiple-precision add rolls b^4-1 + 1 over to a carry', () {
+    final program = assembleMixal(byId('mp-add').source);
+    final m = MixMachine()..loadProgram(program);
+    m.run();
+    for (var i = 0; i < 4; i++) {
+      expect(m.memory[1020 + i].value, 0, reason: 'W[$i]');
+    }
+    expect(m.memory[program.symbols['CARRY']!].value, 1);
+  });
+
+  test('binary GCD of 1071 and 462 is 21', () {
+    final program = assembleMixal(byId('binary-gcd').source);
+    final m = MixMachine()..loadProgram(program);
+    m.run();
+    expect(m.memory[program.symbols['RESULT']!].value, 21);
+  });
+
+  test('power computes 3^13 = 1594323', () {
+    final program = assembleMixal(byId('power').source);
+    final m = MixMachine()..loadProgram(program);
+    m.run();
+    expect(m.memory[program.symbols['RESULT']!].value, 1594323);
+  });
+
   test('maximum subroutine returns 999 at index 5', () {
     final program = assembleMixal(byId('max-subroutine').source);
     final m = MixMachine()..loadProgram(program);

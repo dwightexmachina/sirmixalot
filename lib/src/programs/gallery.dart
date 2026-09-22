@@ -493,6 +493,233 @@ SIX     CON  6
 ''',
   ),
   GalleryProgram(
+    id: 'shuffle',
+    section: '3.4.2',
+    title: 'Random Permutation — Shuffle',
+    description:
+        'Algorithm P: shuffle A[1..8] into a uniformly random order. For j '
+        'from 8 down to 2 it draws a random k in 1..j (the range trick) and '
+        'swaps A[j] with A[k]. The shuffled array ends at 1001.',
+    source: '''
+* Random permutation, Algorithm P (TAOCP 3.4.2): shuffle A[1..N] in place.
+A       EQU  1000
+N       EQU  8
+        ORIG 3000
+START   ENT2 N             is  j = N, working downward
+JLOOP   ST2  JJ
+        LDA  SEED
+        MUL  MULT          is  advance the generator...
+        STX  SEED
+        LDA  SEED
+        ADD  INCR
+        STA  SEED
+        MUL  JJ            is  rA = floor(j * X / m) in 0..j-1
+        INCA 1             is  k in 1..j
+        STA  KK
+        LD3  KK
+        LDA  A,2           is  swap A[j] and A[k]
+        STA  TMP
+        LDA  A,3
+        STA  A,2
+        LDA  TMP
+        STA  A,3
+        DEC2 1
+        ENTA 0,2
+        DECA 1
+        JAP  JLOOP         is  j >= 2  =>  keep shuffling
+        HLT
+SEED    CON  1
+MULT    CON  1664525
+INCR    CON  1013904223
+JJ      CON  0
+KK      CON  0
+TMP     CON  0
+        ORIG A+1
+        CON  1
+        CON  2
+        CON  3
+        CON  4
+        CON  5
+        CON  6
+        CON  7
+        CON  8
+        END  START
+''',
+  ),
+  GalleryProgram(
+    id: 'mp-add',
+    section: '4.3.1',
+    title: 'Multiple-Precision Addition',
+    description:
+        'Adds two four-word big integers (radix 64⁵) digit by digit from the '
+        'least-significant end, using ADD’s overflow toggle as the carry. '
+        'Here (64²⁰ − 1) + 1 rolls over to all zeros with a carry out. The '
+        'sum is at 1020; the final carry is in CARRY.',
+    source: '''
+* Multiple-precision addition (TAOCP 4.3.1): W = U + V, N words, radix 64^5.
+* The carry between words is exactly ADD's overflow toggle.
+U       EQU  1000
+V       EQU  1010
+W       EQU  1020
+N       EQU  4
+        ORIG 3000
+START   ENTA 0
+        STA  CARRY
+        ENT1 N-1           is  start at the least-significant word
+LOOP    LDA  U,1
+        ADD  V,1           is  u + v (may carry)
+        ENT3 0
+        JNOV *+2
+        ENT3 1             is  carry out of this add
+        ADD  CARRY         is  add the incoming carry
+        JNOV *+2
+        ENT3 1
+        STA  W,1
+        ST3  CARRY         is  carry into the next word
+        DEC1 1
+        J1NN LOOP
+        HLT
+CARRY   CON  0
+        ORIG U
+        CON  1073741823
+        CON  1073741823
+        CON  1073741823
+        CON  1073741823
+        ORIG V
+        CON  0
+        CON  0
+        CON  0
+        CON  1
+        END  START
+''',
+  ),
+  GalleryProgram(
+    id: 'binary-gcd',
+    section: '4.5.2',
+    title: 'Binary GCD — Algorithm B',
+    description:
+        'Euclid without division: strip common factors of 2, then repeatedly '
+        'halve the even number and subtract the smaller from the larger. '
+        'gcd(1071, 462) = 21, left in RESULT — computed with only halving, '
+        'comparison, and subtraction.',
+    source: '''
+* Binary GCD, Algorithm B (TAOCP 4.5.2).  gcd(U, V) -> RESULT.
+        ORIG 3000
+START   LDA  U
+        STA  UU
+        LDA  V
+        STA  VV
+        ENT4 0             is  k = count of common factors of 2
+COMMON  ENTA 0
+        LDX  UU
+        DIV  TWO
+        JXNZ AFTER         is  U odd  =>  no more common 2s
+        ENTA 0
+        LDX  VV
+        DIV  TWO
+        JXNZ AFTER         is  V odd  =>  no more common 2s
+        ENTA 0
+        LDX  UU
+        DIV  TWO
+        STA  UU            is  both even: halve both, k++
+        ENTA 0
+        LDX  VV
+        DIV  TWO
+        STA  VV
+        INC4 1
+        JMP  COMMON
+AFTER   ENTA 0
+        LDX  UU
+        DIV  TWO
+        JXNZ MAIN          is  make U odd
+        STA  UU
+        JMP  AFTER
+MAIN    ENTA 0
+        LDX  VV
+        DIV  TWO
+        JXNZ CMPUV         is  make V odd
+        STA  VV
+        JMP  MAIN
+CMPUV   LDA  UU
+        CMPA VV
+        JLE  NOSWAP
+        LDA  UU
+        STA  T
+        LDA  VV
+        STA  UU
+        LDA  T
+        STA  VV
+NOSWAP  LDA  VV
+        SUB  UU
+        STA  VV            is  V = V - U (now even)
+        JAZ  FIN           is  V == 0  =>  U is the gcd
+        JMP  MAIN
+FIN     LDA  UU
+        STA  RES
+        ENT1 0,4
+DBL     J1Z  STORE
+        LDA  RES
+        ADD  RES           is  RES *= 2, k times  (restore common 2s)
+        STA  RES
+        DEC1 1
+        JMP  DBL
+STORE   LDA  RES
+        STA  RESULT
+        HLT
+U       CON  1071
+V       CON  462
+UU      CON  0
+VV      CON  0
+T       CON  0
+RES     CON  0
+RESULT  CON  0
+TWO     CON  2
+        END  START
+''',
+  ),
+  GalleryProgram(
+    id: 'power',
+    section: '4.6.3',
+    title: 'Evaluation of Powers — Squaring',
+    description:
+        'Computes bⁿ by right-to-left binary exponentiation: scan the '
+        'exponent’s bits (via divide-by-2), squaring the base each step and '
+        'multiplying it into the result when the bit is 1. 3¹³ = 1,594,323, '
+        'left in RESULT — far fewer multiplies than the naïve n−1.',
+    source: '''
+* Evaluation of powers (TAOCP 4.6.3): b^n by right-to-left binary method.
+        ORIG 3000
+START   ENTA 1
+        STA  RESULT
+        LDA  BASE0
+        STA  BASE
+        LDA  EXP
+        STA  E
+LOOP    LDA  E
+        JAZ  DONE
+        ENTA 0
+        LDX  E
+        DIV  TWO           is  rA = e/2, rX = low bit of e
+        STA  E
+        JXZ  SKIP          is  bit 0  =>  don't multiply
+        LDA  RESULT
+        MUL  BASE
+        STX  RESULT        is  result *= base
+SKIP    LDA  BASE
+        MUL  BASE
+        STX  BASE          is  base *= base
+        JMP  LOOP
+DONE    HLT
+RESULT  CON  0
+BASE    CON  0
+E       CON  0
+BASE0   CON  3
+EXP     CON  13
+TWO     CON  2
+        END  START
+''',
+  ),
+  GalleryProgram(
     id: 'float-horner',
     section: '4.6.4',
     title: 'Floating Point — Horner’s Rule',
