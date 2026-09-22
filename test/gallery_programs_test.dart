@@ -163,6 +163,24 @@ void main() {
     });
   }
 
+  for (final id in ['sequential-search', 'binary-search', 'uniform-search']) {
+    test('$id finds key 73 at index 73', () {
+      final program = assembleMixal(byId(id).source);
+      final m = MixMachine()..loadProgram(program);
+      m.run();
+      expect(m.memory[program.symbols['RESULT']!].value, 73);
+    });
+  }
+
+  for (final id in ['tree-search', 'hash-chaining', 'hash-linear']) {
+    test('$id finds the present key (FOUND=1)', () {
+      final program = assembleMixal(byId(id).source);
+      final m = MixMachine()..loadProgram(program);
+      m.run();
+      expect(m.memory[program.symbols['FOUND']!].value, 1);
+    });
+  }
+
   test('maximum subroutine returns 999 at index 5', () {
     final program = assembleMixal(byId('max-subroutine').source);
     final m = MixMachine()..loadProgram(program);

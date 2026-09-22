@@ -1595,6 +1595,444 @@ C256    CON  256
 ''',
   ),
   GalleryProgram(
+    id: 'sequential-search',
+    section: '6.1',
+    title: 'Sequential Search',
+    description:
+        'Fills a sorted ramp A[i] = i, then scans left to right for key 73, '
+        'leaving its index in RESULT. O(n) — the read-cursor simply marches '
+        'along the bars until it lands on the target.',
+    arrayBase: 1001,
+    arrayLength: 100,
+    source: '''
+* Sequential search (TAOCP 6.1). Ramp A[i] = i; find KEY, index in RESULT.
+A       EQU  1000
+N       EQU  100
+        ORIG 3000
+START   ENT1 1
+RFILL   ENTA 0,1
+        STA  A,1
+        INC1 1
+        CMP1 =N=
+        JLE  RFILL
+        ENT1 1
+SLOOP   LDA  A,1
+        CMPA KEY
+        JE   SFOUND
+        INC1 1
+        CMP1 =N=
+        JLE  SLOOP
+        ENTA 0
+        STA  RESULT
+        HLT
+SFOUND  ST1  RESULT
+        HLT
+KEY     CON  73
+RESULT  CON  0
+        END  START
+''',
+  ),
+  GalleryProgram(
+    id: 'binary-search',
+    section: '6.2.1',
+    title: 'Binary Search',
+    description:
+        'On the sorted ramp, repeatedly halve the [lo,hi] range: probe the '
+        'midpoint, then keep the half that could contain key 73. O(log n) — '
+        'watch the probes converge in a handful of steps. Index in RESULT.',
+    arrayBase: 1001,
+    arrayLength: 100,
+    source: '''
+* Binary search (TAOCP 6.2.1). Ramp A[i] = i; index of KEY in RESULT.
+A       EQU  1000
+N       EQU  100
+        ORIG 3000
+START   ENT1 1
+RFILL   ENTA 0,1
+        STA  A,1
+        INC1 1
+        CMP1 =N=
+        JLE  RFILL
+        ENTA 1
+        STA  LO
+        ENTA N
+        STA  HI
+BLOOP   LDA  LO
+        CMPA HI
+        JG   BNONE
+        LDA  LO
+        ADD  HI
+        STA  SUM
+        ENTA 0
+        LDX  SUM
+        DIV  TWO
+        STA  MID           is  mid = (lo+hi)/2
+        LD1  MID
+        LDA  A,1
+        CMPA KEY
+        JE   BFOUND
+        JG   BHI
+        LDA  MID
+        INCA 1
+        STA  LO            is  A[mid] < key: search right
+        JMP  BLOOP
+BHI     LDA  MID
+        DECA 1
+        STA  HI            is  A[mid] > key: search left
+        JMP  BLOOP
+BFOUND  ST1  RESULT
+        HLT
+BNONE   ENTA 0
+        STA  RESULT
+        HLT
+LO      CON  0
+HI      CON  0
+SUM     CON  0
+MID     CON  0
+TWO     CON  2
+KEY     CON  73
+RESULT  CON  0
+        END  START
+''',
+  ),
+  GalleryProgram(
+    id: 'uniform-search',
+    section: '6.2.1',
+    title: 'Uniform Binary Search',
+    description:
+        'A binary search whose probe steps are fixed powers of two — first '
+        'the largest 2ᵏ ≤ N, then halving — so it never computes (lo+hi)/2. '
+        'Finds the largest index with A[i] ≤ key, then checks equality. '
+        'Index of 73 in RESULT.',
+    arrayBase: 1001,
+    arrayLength: 100,
+    source: '''
+* Uniform binary search (TAOCP 6.2.1), power-of-two steps. Ramp A[i] = i.
+A       EQU  1000
+N       EQU  100
+        ORIG 3000
+START   ENT1 1
+RFILL   ENTA 0,1
+        STA  A,1
+        INC1 1
+        CMP1 =N=
+        JLE  RFILL
+        ENTA 1
+        STA  STEP
+US1     LDA  STEP
+        ADD  STEP
+        CMPA =N=
+        JG   US1D
+        STA  STEP
+        JMP  US1           is  STEP = largest power of 2 <= N
+US1D    ENT1 0
+USL     LDA  STEP
+        JAZ  USDONE
+        ENTA 0,1
+        ADD  STEP
+        CMPA =N=
+        JG   USHALF
+        STA  IPS
+        LD2  IPS
+        LDA  A,2
+        CMPA KEY
+        JG   USHALF
+        LD1  IPS           is  A[i+step] <= key: advance i
+USHALF  LDA  STEP
+        STA  T
+        ENTA 0
+        LDX  T
+        DIV  TWO
+        STA  STEP          is  halve the step
+        JMP  USL
+USDONE  ENTA 0,1
+        JAZ  USNONE
+        LDA  A,1
+        CMPA KEY
+        JE   USFOUND
+USNONE  ENTA 0
+        STA  RESULT
+        HLT
+USFOUND ST1  RESULT
+        HLT
+STEP    CON  0
+IPS     CON  0
+T       CON  0
+TWO     CON  2
+KEY     CON  73
+RESULT  CON  0
+        END  START
+''',
+  ),
+  GalleryProgram(
+    id: 'tree-search',
+    section: '6.2.2',
+    title: 'Binary Tree Search & Insertion',
+    description:
+        'Inserts 100 random keys into a binary search tree (LEFT/RIGHT link '
+        'arrays), then searches for one that is present, setting FOUND = 1. '
+        'The bar chart shows the keys in insertion order; the search reads '
+        'flash along the tree path.',
+    arrayBase: 1001,
+    arrayLength: 100,
+    source: '''
+* Binary tree search and insertion (TAOCP 6.2.2).
+A       EQU  1000
+LEFT    EQU  1200
+RIGHT   EQU  1400
+N       EQU  100
+        ORIG 3000
+START   ENT1 1
+FILL    LDA  SEED
+        MUL  MULT
+        STX  SEED
+        LDA  SEED
+        ADD  INCR
+        STA  SEED
+        MUL  C256
+        STA  A,1
+        INC1 1
+        CMP1 =N=
+        JLE  FILL
+        LDA  A+50
+        STA  TARGET        is  search for a key we inserted
+        ENTA 0
+        STA  ROOT
+        ENT1 1
+BINS    LDA  ROOT
+        JAZ  BSROOT
+        LD2  ROOT
+BDESC   LDA  A,1
+        CMPA A,2
+        JL   BLEFT
+        LDA  RIGHT,2
+        JAZ  BINSR
+        LD2  RIGHT,2
+        JMP  BDESC
+BLEFT   LDA  LEFT,2
+        JAZ  BINSL
+        LD2  LEFT,2
+        JMP  BDESC
+BINSR   ENTA 0,1
+        STA  RIGHT,2
+        JMP  BNEXT
+BINSL   ENTA 0,1
+        STA  LEFT,2
+        JMP  BNEXT
+BSROOT  ENTA 0,1
+        STA  ROOT
+BNEXT   INC1 1
+        CMP1 =N=
+        JLE  BINS
+        LDA  ROOT
+        STA  P
+BSRCH   LDA  P
+        JAZ  BNONE
+        LD2  P
+        LDA  TARGET
+        CMPA A,2
+        JE   BFOUND
+        JL   BSL
+        LDA  RIGHT,2
+        STA  P
+        JMP  BSRCH
+BSL     LDA  LEFT,2
+        STA  P
+        JMP  BSRCH
+BFOUND  ENTA 1
+        STA  FOUND
+        HLT
+BNONE   ENTA 0
+        STA  FOUND
+        HLT
+ROOT    CON  0
+P       CON  0
+TARGET  CON  0
+FOUND   CON  0
+SEED    CON  1
+MULT    CON  1664525
+INCR    CON  1013904223
+C256    CON  256
+        END  START
+''',
+  ),
+  GalleryProgram(
+    id: 'hash-chaining',
+    section: '6.4',
+    title: 'Hashing — Separate Chaining',
+    description:
+        'Hashes 100 random keys into 16 buckets (key mod 16), each bucket a '
+        'linked list, then searches one bucket for a present key (FOUND = 1). '
+        'Near-constant time regardless of table order.',
+    arrayBase: 1001,
+    arrayLength: 100,
+    source: '''
+* Hashing with separate chaining (TAOCP 6.4). 16 buckets, key mod 16.
+A       EQU  1000
+HASH    EQU  1200
+NEXT    EQU  1300
+N       EQU  100
+        ORIG 3000
+START   ENT1 1
+FILL    LDA  SEED
+        MUL  MULT
+        STX  SEED
+        LDA  SEED
+        ADD  INCR
+        STA  SEED
+        MUL  C256
+        STA  A,1
+        INC1 1
+        CMP1 =N=
+        JLE  FILL
+        LDA  A+50
+        STA  TARGET
+        ENT1 1
+HINS    LDA  A,1
+        STA  T
+        ENTA 0
+        LDX  T
+        DIV  M16
+        STX  H             is  bucket = key mod 16
+        LD2  H
+        LDA  HASH,2
+        STA  NEXT,1
+        ENTA 0,1
+        STA  HASH,2        is  prepend node to the bucket list
+        INC1 1
+        CMP1 =N=
+        JLE  HINS
+        LDA  TARGET
+        STA  T
+        ENTA 0
+        LDX  T
+        DIV  M16
+        STX  H
+        LD2  H
+        LDA  HASH,2
+        STA  P
+HSRCH   LDA  P
+        JAZ  HNONE
+        LD3  P
+        LDA  A,3
+        CMPA TARGET
+        JE   HFOUND
+        LDA  NEXT,3
+        STA  P             is  walk the chain
+        JMP  HSRCH
+HFOUND  ENTA 1
+        STA  FOUND
+        HLT
+HNONE   ENTA 0
+        STA  FOUND
+        HLT
+T       CON  0
+H       CON  0
+P       CON  0
+TARGET  CON  0
+FOUND   CON  0
+M16     CON  16
+SEED    CON  1
+MULT    CON  1664525
+INCR    CON  1013904223
+C256    CON  256
+        END  START
+''',
+  ),
+  GalleryProgram(
+    id: 'hash-linear',
+    section: '6.4',
+    title: 'Hashing — Linear Probing',
+    description:
+        'Open addressing: hash 100 random keys into a 128-slot table (key mod '
+        '128) and resolve collisions by probing the next slot. Search walks '
+        'the same probe sequence until it hits the key or an empty slot '
+        '(FOUND = 1).',
+    arrayBase: 1001,
+    arrayLength: 100,
+    source: '''
+* Hashing with linear probing (TAOCP 6.4). 128-slot open-addressed table.
+A       EQU  1000
+TABLE   EQU  1200
+N       EQU  100
+        ORIG 3000
+START   ENT1 1
+FILL    LDA  SEED
+        MUL  MULT
+        STX  SEED
+        LDA  SEED
+        ADD  INCR
+        STA  SEED
+        MUL  C256
+        STA  A,1
+        INC1 1
+        CMP1 =N=
+        JLE  FILL
+        LDA  A+50
+        STA  TARGET
+        ENT1 1
+LINS    LDA  A,1
+        STA  T
+        ENTA 0
+        LDX  T
+        DIV  M128
+        STX  SLOT          is  slot = key mod 128
+LPROBE  LD2  SLOT
+        LDA  TABLE,2
+        JAZ  LPUT
+        LDA  SLOT
+        INCA 1
+        STA  SLOT
+        CMPA M128
+        JL   LPROBE
+        ENTA 0
+        STA  SLOT          is  wrap around
+        JMP  LPROBE
+LPUT    ENTA 0,1
+        STA  TABLE,2
+        INC1 1
+        CMP1 =N=
+        JLE  LINS
+        LDA  TARGET
+        STA  T
+        ENTA 0
+        LDX  T
+        DIV  M128
+        STX  SLOT
+LSRCH   LD2  SLOT
+        LDA  TABLE,2
+        JAZ  LNONE
+        LD3  TABLE,2
+        LDA  A,3
+        CMPA TARGET
+        JE   LFOUND
+        LDA  SLOT
+        INCA 1
+        STA  SLOT
+        CMPA M128
+        JL   LSRCH
+        ENTA 0
+        STA  SLOT
+        JMP  LSRCH
+LFOUND  ENTA 1
+        STA  FOUND
+        HLT
+LNONE   ENTA 0
+        STA  FOUND
+        HLT
+T       CON  0
+SLOT    CON  0
+TARGET  CON  0
+FOUND   CON  0
+M128    CON  128
+SEED    CON  1
+MULT    CON  1664525
+INCR    CON  1013904223
+C256    CON  256
+        END  START
+''',
+  ),
+  GalleryProgram(
     id: 'float-horner',
     section: '4.6.4',
     title: 'Floating Point — Horner’s Rule',
