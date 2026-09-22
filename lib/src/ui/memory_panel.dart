@@ -3,6 +3,7 @@ import 'package:mix_core/mix_core.dart';
 
 import '../controller/machine_controller.dart';
 import '../theme.dart';
+import 'hover_card.dart';
 import 'word_view.dart';
 
 /// All 4000 words, virtualized, with read/write/PC highlighting and an
@@ -108,13 +109,31 @@ class _MemoryPanelState extends State<MemoryPanel> {
                       WordView(word: word, accent: accent),
                       const SizedBox(width: 12),
                       Expanded(
-                        child: Text(
-                          isCode ? disassemble(word) : '= ${word.value}',
-                          overflow: TextOverflow.clip,
-                          softWrap: false,
-                          style: MixText.monoDim.copyWith(
-                            fontSize: 11.5,
-                            color: accent ?? MixColors.labelDim,
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: HoverCard(
+                            contentBuilder: (_) => isCode
+                                ? InstructionTooltipCard(
+                                    explanation: explainInstruction(
+                                      word,
+                                      machine: m,
+                                      address: addr,
+                                    ),
+                                  )
+                                : DataTooltipCard(word: word),
+                            child: Text(
+                              isCode ? disassemble(word) : '= ${word.value}',
+                              overflow: TextOverflow.clip,
+                              softWrap: false,
+                              style: MixText.monoDim.copyWith(
+                                fontSize: 11.5,
+                                color: accent ?? MixColors.labelDim,
+                                decoration: TextDecoration.underline,
+                                decorationStyle: TextDecorationStyle.dotted,
+                                decorationColor: (accent ?? MixColors.labelDim)
+                                    .withValues(alpha: 0.55),
+                              ),
+                            ),
                           ),
                         ),
                       ),
