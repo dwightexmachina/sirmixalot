@@ -34,6 +34,71 @@ class InstructionExplanation {
   });
 }
 
+/// A plain-English explanation of an assembler directive (EQU/ORIG/END),
+/// which produces no instruction word.
+class DirectiveExplanation {
+  final String op;
+  final String name;
+  final String body;
+
+  /// A resolved fact, e.g. 'X = 1000' or 'execution starts at 3010'.
+  final String? detail;
+
+  DirectiveExplanation({
+    required this.op,
+    required this.name,
+    required this.body,
+    this.detail,
+  });
+}
+
+/// Explains an assembler directive line. Returns null for anything that is
+/// not a word-less directive (machine ops and CON/ALF emit words and are
+/// explained by [explainInstruction] / shown as data instead).
+DirectiveExplanation? explainDirective(
+  String op, {
+  String? label,
+  String? operand,
+  Map<String, int> symbols = const {},
+  int? start,
+}) {
+  switch (op) {
+    case 'EQU':
+      final v = label == null ? null : symbols[label];
+      return DirectiveExplanation(
+        op: 'EQU',
+        name: 'equate — an assembly-time definition',
+        body:
+            'Binds the symbol${label == null ? '' : ' $label'} to a constant '
+            'value while the program is being assembled. It emits no '
+            'instruction and takes up no memory — every later use of the '
+            'symbol is simply shorthand for this number.',
+        detail: (label != null && v != null) ? '$label = $v' : null,
+      );
+    case 'ORIG':
+      return DirectiveExplanation(
+        op: 'ORIG',
+        name: 'set the origin',
+        body:
+            'Moves the assembler\'s location counter${operand == null ? '' : ' to $operand'}, '
+            'so the lines that follow are placed into memory starting at that '
+            'address. Programs use it to separate code from data.',
+      );
+    case 'END':
+      return DirectiveExplanation(
+        op: 'END',
+        name: 'end of assembly',
+        body:
+            'Marks the end of the source and names the entry point where the '
+            'machine begins executing. Any =literal= constants used anywhere '
+            'in the program are assembled into memory just past this point.',
+        detail: start != null ? 'execution starts at $start' : null,
+      );
+    default:
+      return null;
+  }
+}
+
 const _regNames = ['rA', 'rI1', 'rI2', 'rI3', 'rI4', 'rI5', 'rI6', 'rX'];
 
 String _deviceName(int f) {

@@ -217,6 +217,84 @@ class InstructionTooltipCard extends StatelessWidget {
   }
 }
 
+/// Tooltip for an assembler directive (EQU/ORIG/END): name, an explanatory
+/// paragraph, an optional resolved fact, and a directive chip.
+class DirectiveTooltipCard extends StatelessWidget {
+  final DirectiveExplanation explanation;
+
+  const DirectiveTooltipCard({super.key, required this.explanation});
+
+  @override
+  Widget build(BuildContext context) {
+    final e = explanation;
+    return _CardShell(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            children: [
+              Text(e.op,
+                  style: const TextStyle(
+                      fontFamily: monoFamily,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: MixColors.amber)),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text('“${e.name}”',
+                    style: const TextStyle(
+                        fontSize: 12,
+                        fontStyle: FontStyle.italic,
+                        color: MixColors.dataDim)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 9),
+          Text(e.body,
+              style: const TextStyle(
+                  fontSize: 12.5, height: 1.6, color: MixColors.data)),
+          if (e.detail != null) ...[
+            const SizedBox(height: 10),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              decoration: const BoxDecoration(
+                color: MixColors.panelDeep,
+                border: Border(
+                  left: BorderSide(color: MixColors.amber, width: 3),
+                ),
+                borderRadius: BorderRadius.all(Radius.circular(4)),
+              ),
+              child: Text(e.detail!,
+                  style: const TextStyle(
+                      fontFamily: monoFamily,
+                      fontSize: 12,
+                      color: MixColors.data)),
+            ),
+          ],
+          const SizedBox(height: 10),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              color: MixColors.bezelSoft,
+              border: Border.all(color: MixColors.bezel),
+              borderRadius: BorderRadius.circular(3),
+            ),
+            child: const Text('ASSEMBLER DIRECTIVE',
+                style: TextStyle(
+                    fontSize: 9.5,
+                    letterSpacing: 1.0,
+                    color: MixColors.label)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 /// Tooltip for data words: the value as decimal, characters, and how it
 /// would decode if executed.
 class DataTooltipCard extends StatelessWidget {
