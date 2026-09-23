@@ -12,7 +12,9 @@ import 'src/ui/source_panel.dart';
 import 'src/ui/tape_view.dart';
 import 'src/ui/toolbar.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await loadSavedSkin();
   runApp(const SirMixAlotApp());
 }
 
@@ -21,19 +23,27 @@ class SirMixAlotApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'sirMIXalot',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        brightness: Brightness.dark,
-        scaffoldBackgroundColor: MixColors.ground,
-        colorScheme: const ColorScheme.dark(
-          primary: MixColors.amber,
-          surface: MixColors.panel,
+    // Rebuild the entire app when the skin changes so every MixColors/MixText
+    // getter re-resolves against the new palette.
+    return ValueListenableBuilder<MixSkin>(
+      valueListenable: activeSkin,
+      builder: (context, skin, _) => MaterialApp(
+        title: 'sirMIXalot',
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          brightness: Brightness.dark,
+          scaffoldBackgroundColor: MixColors.ground,
+          colorScheme: ColorScheme.dark(
+            primary: MixColors.amber,
+            surface: MixColors.panel,
+          ),
+          useMaterial3: true,
         ),
-        useMaterial3: true,
+        // NOT const: a fresh instance each skin change forces the console
+        // subtree to rebuild and re-read the MixColors getters. The State
+        // (and machine) is preserved since the type and key are unchanged.
+        home: MachineScreen(),
       ),
-      home: const MachineScreen(),
     );
   }
 }
@@ -52,10 +62,20 @@ class _MachineScreenState extends State<MachineScreen> {
   void initState() {
     super.initState();
     controller = MachineController();
+    // Rebuild the console when the skin changes so every MixColors getter
+    // re-resolves. This State element persists across skin changes, so it is
+    // the reliable rebuild boundary (the MaterialApp/Navigator above may cache
+    // the home route).
+    activeSkin.addListener(_onSkinChanged);
+  }
+
+  void _onSkinChanged() {
+    if (mounted) setState(() {});
   }
 
   @override
   void dispose() {
+    activeSkin.removeListener(_onSkinChanged);
     controller.dispose();
     super.dispose();
   }
@@ -66,23 +86,37 @@ class _MachineScreenState extends State<MachineScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: LayoutBuilder(
-        builder: (context, box) {
-          final width =
-              box.maxWidth < _minWidth ? _minWidth : box.maxWidth;
-          final height =
-              box.maxHeight < _minHeight ? _minHeight : box.maxHeight;
-          return SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: SingleChildScrollView(
-              child: SizedBox(
-                width: width,
-                height: height,
-                child: _console(),
+      backgroundColor: MixColors.ground,
+      body: Stack(
+        children: [
+          // Per-skin background texture (scanlines / grid), fixed to the
+          // viewport behind the scrolling console.
+          Positioned.fill(
+            child: IgnorePointer(
+              child: CustomPaint(
+                painter: SkinTexturePainter(activeSkin.value),
               ),
             ),
-          );
-        },
+          ),
+          LayoutBuilder(
+            builder: (context, box) {
+              final width =
+                  box.maxWidth < _minWidth ? _minWidth : box.maxWidth;
+              final height =
+                  box.maxHeight < _minHeight ? _minHeight : box.maxHeight;
+              return SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: SingleChildScrollView(
+                  child: SizedBox(
+                    width: width,
+                    height: height,
+                    child: _console(),
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
       ),
     );
   }
@@ -156,7 +190,7 @@ class _MachineScreenState extends State<MachineScreen> {
       textBaseline: TextBaseline.alphabetic,
       children: [
         RichText(
-          text: const TextSpan(
+          text: TextSpan(
             style: TextStyle(
               fontFamily: monoFamily,
               fontSize: 19,
@@ -172,9 +206,11 @@ class _MachineScreenState extends State<MachineScreen> {
           ),
         ),
         const SizedBox(width: 12),
-        const Text("Knuth's MIX 1009, visualized",
+        Text("Knuth's MIX 1009, visualized",
             style: TextStyle(fontSize: 12.5, color: MixColors.labelDim)),
         const Spacer(),
+        const SkinPicker(),
+        const SizedBox(width: 12),
         InkWell(
           onTap: () => showInstructionReference(context),
           borderRadius: BorderRadius.circular(5),
@@ -185,7 +221,7 @@ class _MachineScreenState extends State<MachineScreen> {
               border: Border.all(color: MixColors.amber.withValues(alpha: 0.55)),
               borderRadius: BorderRadius.circular(5),
             ),
-            child: const Text('▤  INSTRUCTIONS',
+            child: Text('▤  INSTRUCTIONS',
                 style: TextStyle(
                     fontSize: 10.5,
                     letterSpacing: 1.4,
@@ -193,7 +229,7 @@ class _MachineScreenState extends State<MachineScreen> {
           ),
         ),
         const SizedBox(width: 12),
-        const Text('6-BIT BYTES · 4000 WORDS · TAOCP',
+        Text('6-BIT BYTES · 4000 WORDS · TAOCP',
             style: MixText.caption),
       ],
     );

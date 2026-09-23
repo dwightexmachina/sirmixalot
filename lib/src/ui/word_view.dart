@@ -56,17 +56,18 @@ class WordView extends StatelessWidget {
 class Lamp extends StatelessWidget {
   final String label;
   final bool lit;
-  final Color color;
+  final Color? color;
 
   const Lamp({
     super.key,
     required this.label,
     required this.lit,
-    this.color = MixColors.green,
+    this.color,
   });
 
   @override
   Widget build(BuildContext context) {
+    final color = this.color ?? MixColors.green;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -84,7 +85,7 @@ class Lamp extends StatelessWidget {
         ),
         const SizedBox(height: 3),
         Text(label,
-            style: const TextStyle(
+            style: TextStyle(
                 fontFamily: monoFamily,
                 fontSize: 9,
                 color: MixColors.labelDim)),

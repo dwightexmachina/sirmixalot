@@ -50,7 +50,7 @@ class ConsoleToolbar extends StatelessWidget {
           const SizedBox(width: 8),
           _Button(label: 'RESET', glyph: '↺', onTap: controller.reset),
           _divider(),
-          const Text('SPEED', style: MixText.caption),
+          Text('SPEED', style: MixText.caption),
           SizedBox(
             width: 150,
             child: SliderTheme(
@@ -78,10 +78,10 @@ class ConsoleToolbar extends StatelessWidget {
           _ProgramPicker(controller: controller),
           const Spacer(),
           if (m.halted) ...[
-            const _StatusChip(text: 'HALTED', color: MixColors.green),
+            _StatusChip(text: 'HALTED', color: MixColors.green),
             const SizedBox(width: 14),
           ] else if (controller.error != null) ...[
-            const _StatusChip(text: 'ERROR', color: MixColors.lampRed),
+            _StatusChip(text: 'ERROR', color: MixColors.lampRed),
             const SizedBox(width: 14),
           ],
           _Counter(value: '${withCommas(m.cycles)}u', caption: 'ELAPSED TIME'),
@@ -176,7 +176,7 @@ class _ProgramPicker extends StatelessWidget {
           dropdownColor: MixColors.panel,
           isDense: true,
           isExpanded: true,
-          style: const TextStyle(fontSize: 12.5, color: MixColors.data),
+          style: TextStyle(fontSize: 12.5, color: MixColors.data),
           iconEnabledColor: MixColors.labelDim,
           items: _groupedItems(),
           onChanged: (p) {
@@ -251,7 +251,7 @@ class _Counter extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(value,
-            style: const TextStyle(
+            style: TextStyle(
                 fontFamily: monoFamily,
                 fontSize: 16,
                 fontWeight: FontWeight.w600,

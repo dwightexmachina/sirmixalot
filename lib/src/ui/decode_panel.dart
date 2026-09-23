@@ -23,7 +23,7 @@ class DecodePanel extends StatelessWidget {
       body = Text('Machine halted after ${withPlural(m.instructions)}.',
           style: MixText.monoDim.copyWith(height: 1.5));
     } else if (controller.program == null) {
-      body = const Text('No program loaded.', style: MixText.monoDim);
+      body = Text('No program loaded.', style: MixText.monoDim);
     } else {
       body = _decode(m);
     }
@@ -92,13 +92,13 @@ class DecodePanel extends StatelessWidget {
         const SizedBox(height: 10),
         Row(
           children: [
-            const Text('COST', style: MixText.caption),
+            Text('COST', style: MixText.caption),
             const SizedBox(width: 8),
             Text('${cost}u',
                 style: MixText.mono.copyWith(
                     color: MixColors.amber, fontSize: 12.5)),
             const SizedBox(width: 20),
-            const Text('OPCODE', style: MixText.caption),
+            Text('OPCODE', style: MixText.caption),
             const SizedBox(width: 8),
             Text('C = ${ins.c}',
                 style: MixText.monoDim.copyWith(fontSize: 12)),

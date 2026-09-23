@@ -60,8 +60,8 @@ class _ReferenceDialogState extends State<_ReferenceDialog> {
             _searchBox(),
             Flexible(
               child: rows.isEmpty
-                  ? const Padding(
-                      padding: EdgeInsets.all(28),
+                  ? Padding(
+                      padding: const EdgeInsets.all(28),
                       child: Text('No instructions match.',
                           style: MixText.monoDim),
                     )
@@ -85,12 +85,12 @@ class _ReferenceDialogState extends State<_ReferenceDialog> {
   Widget _header(BuildContext context) {
     return Container(
       padding: const EdgeInsets.fromLTRB(18, 15, 14, 12),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         border: Border(bottom: BorderSide(color: MixColors.bezelSoft)),
       ),
       child: Row(
         children: [
-          const Text('MIX INSTRUCTION SET', style: MixText.panelTitle),
+          Text('MIX INSTRUCTION SET', style: MixText.panelTitle),
           const SizedBox(width: 10),
           Text('${_all.length} forms · generated from the emulator',
               style: MixText.caption.copyWith(fontSize: 10.5)),
@@ -98,8 +98,8 @@ class _ReferenceDialogState extends State<_ReferenceDialog> {
           InkWell(
             onTap: () => Navigator.of(context).pop(),
             borderRadius: BorderRadius.circular(4),
-            child: const Padding(
-              padding: EdgeInsets.all(4),
+            child: Padding(
+              padding: const EdgeInsets.all(4),
               child: Text('✕',
                   style: TextStyle(color: MixColors.labelDim, fontSize: 16)),
             ),
@@ -121,16 +121,16 @@ class _ReferenceDialogState extends State<_ReferenceDialog> {
         ),
         child: Row(
           children: [
-            const Text('⌕',
+            Text('⌕',
                 style: TextStyle(color: MixColors.labelDim, fontSize: 13)),
             const SizedBox(width: 8),
             Expanded(
               child: TextField(
                 autofocus: true,
-                style: const TextStyle(
+                style: TextStyle(
                     fontFamily: monoFamily, fontSize: 12.5, color: MixColors.data),
                 cursorColor: MixColors.amber,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   isDense: true,
                   border: InputBorder.none,
                   hintText: 'filter by mnemonic or name — JG, load, shift, float',
@@ -181,7 +181,7 @@ class _ReferenceDialogState extends State<_ReferenceDialog> {
                 SizedBox(
                   width: 78,
                   child: Text(r.mnemonic,
-                      style: const TextStyle(
+                      style: TextStyle(
                           fontFamily: monoFamily,
                           fontSize: 13,
                           fontWeight: FontWeight.w700,
@@ -200,7 +200,7 @@ class _ReferenceDialogState extends State<_ReferenceDialog> {
                 ),
                 Expanded(
                   child: Text(r.name,
-                      style: const TextStyle(fontSize: 12, color: MixColors.data)),
+                      style: TextStyle(fontSize: 12, color: MixColors.data)),
                 ),
               ],
             ),
@@ -214,7 +214,7 @@ class _ReferenceDialogState extends State<_ReferenceDialog> {
                         style: MixText.monoDim.copyWith(fontSize: 10)),
                     const SizedBox(height: 6),
                     Text(r.body,
-                        style: const TextStyle(
+                        style: TextStyle(
                             fontSize: 12, height: 1.55, color: MixColors.data)),
                   ],
                 ),

@@ -40,11 +40,11 @@ class RegisterPanel extends StatelessWidget {
             const SizedBox(height: 10),
             Row(
               children: [
-                const Text('OVERFLOW', style: MixText.caption),
+                Text('OVERFLOW', style: MixText.caption),
                 const SizedBox(width: 10),
                 Lamp(label: 'OV', lit: m.overflow, color: MixColors.lampRed),
                 const SizedBox(width: 26),
-                const Text('COMPARISON', style: MixText.caption),
+                Text('COMPARISON', style: MixText.caption),
                 const SizedBox(width: 10),
                 Lamp(label: 'L', lit: m.comparison == MixComparison.less),
                 const SizedBox(width: 8),

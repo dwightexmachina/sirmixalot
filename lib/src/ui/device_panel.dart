@@ -140,7 +140,7 @@ class _PrinterPanelState extends State<_PrinterPanel> {
                       line,
                       overflow: TextOverflow.clip,
                       softWrap: false,
-                      style: const TextStyle(
+                      style: TextStyle(
                           fontFamily: monoFamily,
                           fontSize: 11.5,
                           color: MixColors.paperInk),

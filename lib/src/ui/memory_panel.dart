@@ -45,7 +45,7 @@ class _MemoryPanelState extends State<MemoryPanel> {
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text('FOLLOW PC', style: MixText.caption),
+          Text('FOLLOW PC', style: MixText.caption),
           SizedBox(
             height: 22,
             child: Switch(
@@ -137,11 +137,11 @@ class _MemoryPanelState extends State<MemoryPanel> {
           ),
           const SizedBox(height: 8),
           Row(
-            children: const [
+            children: [
               _LegendKey(color: MixColors.amber, text: 'EXECUTING (PC)'),
-              SizedBox(width: 16),
+              const SizedBox(width: 16),
               _LegendKey(color: MixColors.blue, text: 'READ'),
-              SizedBox(width: 16),
+              const SizedBox(width: 16),
               _LegendKey(color: MixColors.green, text: 'WRITTEN'),
             ],
           ),

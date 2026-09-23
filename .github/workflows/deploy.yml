@@ -19,6 +19,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      # Turns on GitHub Pages (source = Actions) on the first run so the
+      # initial deploy doesn't need Pages flipped on manually first.
+      - uses: actions/configure-pages@v5
+        with:
+          enablement: true
       - uses: subosito/flutter-action@v2
         with:
           channel: stable

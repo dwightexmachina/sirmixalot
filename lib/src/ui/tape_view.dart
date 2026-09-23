@@ -18,7 +18,7 @@ class TapeView extends StatelessWidget {
     final m = controller.machine;
     return ConsolePanel(
       title: 'Tape Units',
-      trailing: const Text('◀ HEAD', style: MixText.caption),
+      trailing: Text('◀ HEAD', style: MixText.caption),
       child: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -105,7 +105,7 @@ class _TapeRow extends StatelessWidget {
         border: Border.all(color: MixColors.amber),
         borderRadius: BorderRadius.circular(3),
       ),
-      child: const Text('▸',
+      child: Text('▸',
           style: TextStyle(fontSize: 10, color: MixColors.amber)),
     );
   }

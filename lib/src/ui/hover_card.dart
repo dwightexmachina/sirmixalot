@@ -139,7 +139,7 @@ class InstructionTooltipCard extends StatelessWidget {
             textBaseline: TextBaseline.alphabetic,
             children: [
               Text(e.mnemonic,
-                  style: const TextStyle(
+                  style: TextStyle(
                       fontFamily: monoFamily,
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
@@ -147,7 +147,7 @@ class InstructionTooltipCard extends StatelessWidget {
               const SizedBox(width: 10),
               Expanded(
                 child: Text('“${e.name}”',
-                    style: const TextStyle(
+                    style: TextStyle(
                         fontSize: 12,
                         fontStyle: FontStyle.italic,
                         color: MixColors.dataDim)),
@@ -156,20 +156,20 @@ class InstructionTooltipCard extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(e.fields,
-              style: const TextStyle(
+              style: TextStyle(
                   fontFamily: monoFamily,
                   fontSize: 10.5,
                   color: MixColors.labelDim)),
           const SizedBox(height: 9),
           Text(e.body,
-              style: const TextStyle(
+              style: TextStyle(
                   fontSize: 12.5, height: 1.6, color: MixColors.data)),
           if (e.rightNow != null) ...[
             const SizedBox(height: 10),
             Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: MixColors.panelDeep,
                 border: Border(
                   left: BorderSide(color: MixColors.blue, width: 3),
@@ -178,13 +178,13 @@ class InstructionTooltipCard extends StatelessWidget {
               ),
               child: Text.rich(
                 TextSpan(children: [
-                  const TextSpan(
+                  TextSpan(
                       text: 'Right now: ',
                       style: TextStyle(
                           color: MixColors.blue, fontWeight: FontWeight.w600)),
                   TextSpan(text: e.rightNow),
                 ]),
-                style: const TextStyle(
+                style: TextStyle(
                     fontSize: 12, height: 1.55, color: MixColors.dataDim),
               ),
             ),
@@ -209,7 +209,7 @@ class InstructionTooltipCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(3),
       ),
       child: Text(text.toUpperCase(),
-          style: const TextStyle(
+          style: TextStyle(
               fontSize: 9.5,
               letterSpacing: 1.0,
               color: MixColors.label)),
@@ -237,7 +237,7 @@ class DirectiveTooltipCard extends StatelessWidget {
             textBaseline: TextBaseline.alphabetic,
             children: [
               Text(e.op,
-                  style: const TextStyle(
+                  style: TextStyle(
                       fontFamily: monoFamily,
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
@@ -245,7 +245,7 @@ class DirectiveTooltipCard extends StatelessWidget {
               const SizedBox(width: 10),
               Expanded(
                 child: Text('“${e.name}”',
-                    style: const TextStyle(
+                    style: TextStyle(
                         fontSize: 12,
                         fontStyle: FontStyle.italic,
                         color: MixColors.dataDim)),
@@ -254,14 +254,14 @@ class DirectiveTooltipCard extends StatelessWidget {
           ),
           const SizedBox(height: 9),
           Text(e.body,
-              style: const TextStyle(
+              style: TextStyle(
                   fontSize: 12.5, height: 1.6, color: MixColors.data)),
           if (e.detail != null) ...[
             const SizedBox(height: 10),
             Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: MixColors.panelDeep,
                 border: Border(
                   left: BorderSide(color: MixColors.amber, width: 3),
@@ -269,7 +269,7 @@ class DirectiveTooltipCard extends StatelessWidget {
                 borderRadius: BorderRadius.all(Radius.circular(4)),
               ),
               child: Text(e.detail!,
-                  style: const TextStyle(
+                  style: TextStyle(
                       fontFamily: monoFamily,
                       fontSize: 12,
                       color: MixColors.data)),
@@ -283,7 +283,7 @@ class DirectiveTooltipCard extends StatelessWidget {
               border: Border.all(color: MixColors.bezel),
               borderRadius: BorderRadius.circular(3),
             ),
-            child: const Text('ASSEMBLER DIRECTIVE',
+            child: Text('ASSEMBLER DIRECTIVE',
                 style: TextStyle(
                     fontSize: 9.5,
                     letterSpacing: 1.0,
@@ -336,7 +336,7 @@ class DataTooltipCard extends StatelessWidget {
           ),
           Expanded(
             child: Text(value,
-                style: const TextStyle(
+                style: TextStyle(
                     fontFamily: monoFamily,
                     fontSize: 12,
                     color: MixColors.data)),
