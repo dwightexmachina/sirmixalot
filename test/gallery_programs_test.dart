@@ -222,6 +222,12 @@ void main() {
     expect(m.memory[program.symbols['REMOUT']!].value, 123456789 % 7);
   });
 
+  test('Algorithm D: 123456 / 123 = 1003 r 87', () {
+    final m = runProgram('algorithm-d');
+    expect([for (var i = 0; i < 4; i++) m.memory[1020 + i].value], [1, 0, 0, 3]);
+    expect([for (var i = 4; i <= 6; i++) m.memory[1000 + i].value], [0, 8, 7]);
+  });
+
   test('radix conversion of 12345 to decimal digits', () {
     final program = assembleMixal(byId('radix-conversion').source);
     final m = MixMachine()..loadProgram(program);

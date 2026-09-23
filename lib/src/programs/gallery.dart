@@ -2350,8 +2350,8 @@ RC      CON  10000
     description:
         'Divides a big integer (radix 10000, most-significant first) by a '
         'single-digit divisor, carrying the remainder into each next digit — '
-        '123,456,789 ÷ 7. Quotient at Q (1100), remainder in REMOUT. (The '
-        'full multi-digit divisor, Algorithm D, is a larger follow-up.)',
+        '123,456,789 ÷ 7. Quotient at Q (1100), remainder in REMOUT. (For the '
+        'full multi-digit divisor, see Algorithm D below.)',
     source: '''
 * Multiple-precision short division (TAOCP 4.3.1): big integer / one digit.
 * Radix 10000, big-endian.
@@ -2389,6 +2389,214 @@ DD      CON  7
         CON  1
         CON  2345
         CON  6789
+        END  START
+''',
+  ),
+  GalleryProgram(
+    id: 'algorithm-d',
+    section: '4.3.1',
+    title: 'Multiple-Precision Division — Algorithm D',
+    description:
+        'Knuth’s Algorithm D: full long division by a multi-digit divisor. '
+        'Normalizes so the divisor’s lead digit is large, estimates each '
+        'quotient digit q̂ from the top two digits, multiplies-and-subtracts, '
+        'and adds the divisor back on the rare over-estimate. 123456 ÷ 123 = '
+        '1003 r 87 (radix 10). Verified over hundreds of random cases.',
+    source: '''
+* Knuth Algorithm D (TAOCP 4.3.1): multi-digit multiple-precision division.
+* Radix 10. Dividend u_1..u_6 (with u_0=0), divisor v_1..v_3, quotient
+* q_0..q_3, remainder left in u_4..u_6 after unnormalizing.
+U       EQU  1000
+V       EQU  1010
+Q       EQU  1020
+RDX     EQU  10
+        ORIG 3000
+START   LDA  V+1
+        INCA 1
+        STA  T
+        ENTA 0
+        LDX  RDXC
+        DIV  T
+        STA  D             is  D1: normalization factor d = 10/(v_1+1)
+        ENTA 0
+        STA  CARRY
+        ENT1 6
+NU      LDA  U,1
+        MUL  D
+        STX  T
+        LDA  T
+        ADD  CARRY
+        STA  T
+        ENTA 0
+        LDX  T
+        DIV  RDXC
+        STX  U,1
+        STA  CARRY
+        DEC1 1
+        J1NN NU            is  U *= d
+        ENTA 0
+        STA  CARRY
+        ENT1 3
+NV      LDA  V,1
+        MUL  D
+        STX  T
+        LDA  T
+        ADD  CARRY
+        STA  T
+        ENTA 0
+        LDX  T
+        DIV  RDXC
+        STX  V,1
+        STA  CARRY
+        DEC1 1
+        J1P  NV            is  V *= d
+        ENT2 0
+JLOOP   ENTA 0,2
+        DECA 3
+        JAP  DFIN          is  j > m  =>  done
+        LDA  U,2
+        MUL  RDXC
+        STX  T
+        LDA  T
+        ADD  U+1,2
+        STA  NUM
+        ENTA 0
+        LDX  NUM
+        DIV  V+1
+        STA  QH            is  D3: q-hat = (U[j]*10+U[j+1]) / v_1
+        STX  RH
+ADJ     LDA  QH
+        DECA RDX
+        JANN ADJDO
+        LDA  QH
+        MUL  V+2
+        STX  T
+        LDA  RH
+        MUL  RDXC
+        STX  T2
+        LDA  T2
+        ADD  U+2,2
+        STA  T2
+        LDA  T
+        CMPA T2
+        JLE  D4            is  q-hat*v_2 <= 10*r-hat+U[j+2]  =>  accept
+ADJDO   LDA  QH
+        DECA 1
+        STA  QH
+        LDA  RH
+        ADD  V+1
+        STA  RH
+        DECA RDX
+        JAN  ADJ
+D4      ENTA 0
+        STA  BORROW
+        ENT1 3
+MSUB    LDA  QH
+        MUL  V,1
+        STX  T
+        LDA  T
+        ADD  BORROW
+        STA  T
+        ENTA 0
+        LDX  T
+        DIV  RDXC
+        STA  BORROW
+        STX  DIG
+        ENTA 0,2
+        INCA 0,1
+        STA  IDX
+        LD3  IDX
+        LDA  U,3
+        SUB  DIG
+        STA  T
+        JANN MSOK
+        ADD  RDXC
+        STA  T
+        LDA  BORROW
+        INCA 1
+        STA  BORROW
+MSOK    LDA  T
+        STA  U,3
+        DEC1 1
+        J1P  MSUB          is  D4: U[j..j+n] -= q-hat * V
+        LDA  U,2
+        SUB  BORROW
+        STA  U,2
+        JANN SETQ
+        LDA  QH
+        DECA 1
+        STA  QH
+        LDA  U,2
+        ADD  RDXC
+        STA  U,2
+        ENTA 0
+        STA  CARRY
+        ENT1 3
+ADB     ENTA 0,2
+        INCA 0,1
+        STA  IDX
+        LD3  IDX
+        LDA  U,3
+        ADD  V,1
+        ADD  CARRY
+        STA  T
+        ENTA 0
+        LDX  T
+        DIV  RDXC
+        STA  CARRY
+        STX  U,3
+        DEC1 1
+        J1P  ADB           is  D6: over-estimate -> add divisor back
+        LDA  U,2
+        ADD  CARRY
+        STA  U,2
+SETQ    LDA  QH
+        STA  Q,2
+        INC2 1
+        JMP  JLOOP
+DFIN    ENTA 0
+        STA  REMC
+        ENT1 4
+UNORM   LDA  REMC
+        MUL  RDXC
+        STX  T
+        LDA  T
+        ADD  U,1
+        STA  T
+        ENTA 0
+        LDX  T
+        DIV  D
+        STA  U,1
+        STX  REMC
+        INC1 1
+        ENTA 0,1
+        DECA 6
+        JANP UNORM         is  D8: unnormalize the remainder
+        HLT
+T       CON  0
+T2      CON  0
+D       CON  0
+CARRY   CON  0
+BORROW  CON  0
+NUM     CON  0
+QH      CON  0
+RH      CON  0
+DIG     CON  0
+IDX     CON  0
+REMC    CON  0
+RDXC    CON  10
+        ORIG U
+        CON  0
+        CON  1
+        CON  2
+        CON  3
+        CON  4
+        CON  5
+        CON  6
+        ORIG V+1
+        CON  1
+        CON  2
+        CON  3
         END  START
 ''',
   ),
