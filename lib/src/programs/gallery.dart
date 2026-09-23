@@ -11,6 +11,9 @@ class GalleryProgram {
   final int? arrayBase;
   final int? arrayLength;
 
+  /// If true, the bottom strip shows the tape units instead of the bar chart.
+  final bool showTapes;
+
   const GalleryProgram({
     required this.id,
     required this.section,
@@ -19,6 +22,7 @@ class GalleryProgram {
     required this.source,
     this.arrayBase,
     this.arrayLength,
+    this.showTapes = false,
   });
 
   String get label => '§$section · $title';
@@ -1608,6 +1612,7 @@ C256    CON  256
         'here, simplified from MIX’s 100-word blocks.)',
     arrayBase: 1001,
     arrayLength: 16,
+    showTapes: true,
     source: '''
 * Balanced two-way merge sort on four tapes (TAOCP 5.4). N a power of two.
 * Tape units are selected at run time by patching the F field (STA lbl(4:4)).

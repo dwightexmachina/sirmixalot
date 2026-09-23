@@ -8,6 +8,7 @@ import 'src/ui/device_panel.dart';
 import 'src/ui/memory_panel.dart';
 import 'src/ui/register_panel.dart';
 import 'src/ui/source_panel.dart';
+import 'src/ui/tape_view.dart';
 import 'src/ui/toolbar.dart';
 
 void main() {
@@ -135,6 +136,9 @@ class _MachineScreenState extends State<MachineScreen> {
   /// The array bar chart for sort-style programs, otherwise the device strip.
   Widget _bottomStrip() {
     final program = controller.current;
+    if (program.showTapes) {
+      return TapeView(controller: controller);
+    }
     if (program.arrayBase != null && program.arrayLength != null) {
       return ArrayView(
         controller: controller,
