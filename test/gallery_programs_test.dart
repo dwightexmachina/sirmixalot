@@ -243,6 +243,32 @@ void main() {
     expect(m.memory[1300].value, 0);
   });
 
+  test('modular exponentiation 7^13 mod 1000 = 407', () {
+    final program = assembleMixal(byId('mod-exp').source);
+    final m = MixMachine()..loadProgram(program);
+    m.run();
+    expect(m.memory[program.symbols['RESULT']!].value, 407);
+  });
+
+  test('additive generator matches its recurrence', () {
+    final m = runProgram('additive-rng');
+    final x = List<int>.filled(16, 0);
+    for (var i = 1; i <= 5; i++) {
+      x[i] = i;
+    }
+    for (var n = 6; n <= 15; n++) {
+      x[n] = (x[n - 3] + x[n - 5]) % 10000;
+      expect(m.memory[1000 + n].value, x[n], reason: 'X[$n]');
+    }
+  });
+
+  test('digital search tree finds the present key (FOUND=1)', () {
+    final program = assembleMixal(byId('digital-search').source);
+    final m = MixMachine()..loadProgram(program);
+    m.run();
+    expect(m.memory[program.symbols['FOUND']!].value, 1);
+  });
+
   test('maximum subroutine returns 999 at index 5', () {
     final program = assembleMixal(byId('max-subroutine').source);
     final m = MixMachine()..loadProgram(program);

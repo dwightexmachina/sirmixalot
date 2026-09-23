@@ -2534,6 +2534,228 @@ IDX     CON  0
 ''',
   ),
   GalleryProgram(
+    id: 'additive-rng',
+    section: '3.2.2',
+    title: 'Additive Random Generator',
+    description:
+        'A lagged-Fibonacci generator: X[n] = (X[n−3] + X[n−5]) mod 10000. '
+        'Seeded with 1..5, it extends the sequence in X[6..15] — the additive '
+        'alternative to the multiplicative (linear congruential) method.',
+    source: '''
+* Additive (lagged-Fibonacci) generator (TAOCP 3.2.2).
+X       EQU  1000
+N       EQU  15
+        ORIG 3000
+START   ENT1 6
+GLOOP   ENTA 0,1
+        DECA 3
+        STA  T
+        LD2  T             is  index n-3
+        ENTA 0,1
+        DECA 5
+        STA  T
+        LD3  T             is  index n-5
+        LDA  X,2
+        ADD  X,3
+        STA  T
+        ENTA 0
+        LDX  T
+        DIV  TEN4
+        STX  X,1           is  X[n] = (X[n-3]+X[n-5]) mod 10000
+        INC1 1
+        CMP1 NVAL
+        JLE  GLOOP
+        HLT
+T       CON  0
+NVAL    CON  15
+TEN4    CON  10000
+        ORIG X+1
+        CON  1
+        CON  2
+        CON  3
+        CON  4
+        CON  5
+        END  START
+''',
+  ),
+  GalleryProgram(
+    id: 'mod-exp',
+    section: '4.6.3',
+    title: 'Modular Exponentiation',
+    description:
+        'Computes aᵇ mod m by right-to-left binary exponentiation, reducing '
+        'mod m after every multiply so the numbers stay small. 7¹³ mod 1000 = '
+        '407; result in RESULT.',
+    source: '''
+* Modular exponentiation (TAOCP 4.6.3): a^b mod m by squaring.
+        ORIG 3000
+START   ENTA 1
+        STA  RESULT
+        LDA  BASE0
+        STA  T
+        ENTA 0
+        LDX  T
+        DIV  MOD
+        STX  BASE          is  base = a mod m
+        LDA  EXP
+        STA  E
+LOOP    LDA  E
+        JAZ  DONE
+        ENTA 0
+        LDX  E
+        DIV  TWO
+        STA  E
+        JXZ  SKIP
+        LDA  RESULT
+        MUL  BASE
+        STX  T
+        ENTA 0
+        LDX  T
+        DIV  MOD
+        STX  RESULT        is  result = result*base mod m
+SKIP    LDA  BASE
+        MUL  BASE
+        STX  T
+        ENTA 0
+        LDX  T
+        DIV  MOD
+        STX  BASE          is  base = base*base mod m
+        JMP  LOOP
+DONE    HLT
+RESULT  CON  0
+BASE    CON  0
+E       CON  0
+T       CON  0
+BASE0   CON  7
+EXP     CON  13
+MOD     CON  1000
+TWO     CON  2
+        END  START
+''',
+  ),
+  GalleryProgram(
+    id: 'digital-search',
+    section: '6.3',
+    title: 'Digital Search Tree',
+    description:
+        'A search tree that branches on the successive bits of the key rather '
+        'than on comparisons: bit d of the key chooses left/right at depth d. '
+        'Inserts 100 random keys, then searches for a present one (FOUND = 1). '
+        'Bits are extracted by dividing by powers of two.',
+    arrayBase: 1001,
+    arrayLength: 100,
+    source: '''
+* Digital search tree (TAOCP 6.3): branch on successive bits of the key.
+A       EQU  1000
+LEFT    EQU  1200
+RIGHT   EQU  1400
+N       EQU  100
+        ORIG 3000
+START   ENT1 1
+FILL    LDA  SEED
+        MUL  MULT
+        STX  SEED
+        LDA  SEED
+        ADD  INCR
+        STA  SEED
+        MUL  C256
+        STA  A,1
+        INC1 1
+        CMP1 =N=
+        JLE  FILL
+        LDA  A+50
+        STA  TARGET
+        ENTA 0
+        STA  ROOT
+        ENT1 1
+DINS    LDA  ROOT
+        JAZ  DSROOT
+        LD2  ROOT
+        ENTA 1
+        STA  POW
+DDESC   LDA  A,1
+        STA  T
+        ENTA 0
+        LDX  T
+        DIV  POW
+        STA  T2
+        ENTA 0
+        LDX  T2
+        DIV  TWO           is  bit = (key / 2^d) mod 2
+        LDA  POW
+        ADD  POW
+        STA  POW
+        JXZ  DLEFT
+        LDA  RIGHT,2
+        JAZ  DINSR
+        LD2  RIGHT,2
+        JMP  DDESC
+DLEFT   LDA  LEFT,2
+        JAZ  DINSL
+        LD2  LEFT,2
+        JMP  DDESC
+DINSR   ENTA 0,1
+        STA  RIGHT,2
+        JMP  DNEXT
+DINSL   ENTA 0,1
+        STA  LEFT,2
+        JMP  DNEXT
+DSROOT  ENTA 0,1
+        STA  ROOT
+DNEXT   INC1 1
+        CMP1 =N=
+        JLE  DINS
+        LDA  ROOT
+        STA  P
+        ENTA 1
+        STA  POW
+DSRCH   LDA  P
+        JAZ  DNONE
+        LD3  P
+        LDA  A,3
+        CMPA TARGET
+        JE   DFOUND
+        LDA  TARGET
+        STA  T
+        ENTA 0
+        LDX  T
+        DIV  POW
+        STA  T2
+        ENTA 0
+        LDX  T2
+        DIV  TWO
+        LDA  POW
+        ADD  POW
+        STA  POW
+        JXZ  DSL
+        LDA  RIGHT,3
+        STA  P
+        JMP  DSRCH
+DSL     LDA  LEFT,3
+        STA  P
+        JMP  DSRCH
+DFOUND  ENTA 1
+        STA  FOUND
+        HLT
+DNONE   ENTA 0
+        STA  FOUND
+        HLT
+ROOT    CON  0
+P       CON  0
+POW     CON  0
+T       CON  0
+T2      CON  0
+TARGET  CON  0
+FOUND   CON  0
+TWO     CON  2
+SEED    CON  1
+MULT    CON  1664525
+INCR    CON  1013904223
+C256    CON  256
+        END  START
+''',
+  ),
+  GalleryProgram(
     id: 'float-horner',
     section: '4.6.4',
     title: 'Floating Point — Horner’s Rule',
