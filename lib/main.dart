@@ -5,6 +5,7 @@ import 'src/theme.dart';
 import 'src/ui/array_view.dart';
 import 'src/ui/decode_panel.dart';
 import 'src/ui/device_panel.dart';
+import 'src/ui/instruction_reference.dart';
 import 'src/ui/memory_panel.dart';
 import 'src/ui/register_panel.dart';
 import 'src/ui/source_panel.dart';
@@ -94,7 +95,7 @@ class _MachineScreenState extends State<MachineScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _header(),
+              _header(context),
               const SizedBox(height: 12),
               ConsoleToolbar(controller: controller),
               const SizedBox(height: 12),
@@ -149,7 +150,7 @@ class _MachineScreenState extends State<MachineScreen> {
     return DeviceStrip(controller: controller);
   }
 
-  Widget _header() {
+  Widget _header(BuildContext context) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.baseline,
       textBaseline: TextBaseline.alphabetic,
@@ -174,6 +175,24 @@ class _MachineScreenState extends State<MachineScreen> {
         const Text("Knuth's MIX 1009, visualized",
             style: TextStyle(fontSize: 12.5, color: MixColors.labelDim)),
         const Spacer(),
+        InkWell(
+          onTap: () => showInstructionReference(context),
+          borderRadius: BorderRadius.circular(5),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: MixColors.amber.withValues(alpha: 0.14),
+              border: Border.all(color: MixColors.amber.withValues(alpha: 0.55)),
+              borderRadius: BorderRadius.circular(5),
+            ),
+            child: const Text('▤  INSTRUCTIONS',
+                style: TextStyle(
+                    fontSize: 10.5,
+                    letterSpacing: 1.4,
+                    color: MixColors.amber)),
+          ),
+        ),
+        const SizedBox(width: 12),
         const Text('6-BIT BYTES · 4000 WORDS · TAOCP',
             style: MixText.caption),
       ],

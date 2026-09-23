@@ -1,5 +1,6 @@
 import 'instruction.dart';
 import 'machine.dart';
+import 'op_table.dart';
 import 'word.dart';
 
 /// A human-readable explanation of one instruction word, for tooltips.
@@ -12,6 +13,9 @@ class InstructionExplanation {
 
   /// One-line decode, e.g. 'C=39 (jump family) · F=7, selects JGE · A=3007 · no index'.
   final String fields;
+
+  /// The instruction family, e.g. 'jump family', 'load', 'arithmetic'.
+  final String family;
 
   /// A paragraph explaining what this specific instruction does.
   final String body;
@@ -27,6 +31,7 @@ class InstructionExplanation {
     required this.mnemonic,
     required this.name,
     required this.fields,
+    required this.family,
     required this.body,
     this.rightNow,
     required this.cost,
@@ -677,9 +682,57 @@ InstructionExplanation explainInstruction(
     mnemonic: disassemble(word),
     name: name,
     fields: 'C=$c ($family) · F=$f, $fMeaning · A=${ins.aa} · $indexPart',
+    family: family,
     body: body,
     rightNow: rightNow,
     cost: cost,
     chips: ['cost ${cost}u', family, ...chips],
   );
+}
+
+/// One entry in the instruction reference.
+class InstructionRef {
+  final String mnemonic;
+  final int c;
+  final int f;
+  final int cost;
+  final String name;
+  final String family;
+  final String fields;
+  final String body;
+
+  InstructionRef({
+    required this.mnemonic,
+    required this.c,
+    required this.f,
+    required this.cost,
+    required this.name,
+    required this.family,
+    required this.fields,
+    required this.body,
+  });
+}
+
+/// The full MIX instruction set, generated from the opcode table and the
+/// explainer so it is always complete and in sync with the emulator.
+List<InstructionRef> instructionReference() {
+  final out = <InstructionRef>[];
+  mixalOps.forEach((mnemonic, info) {
+    final f = info.defaultF;
+    // A sample word (address 100) so the explanations read naturally.
+    final word = MixWord(1, [1, 36, 0, f, info.c]);
+    final e = explainInstruction(word);
+    out.add(InstructionRef(
+      mnemonic: mnemonic,
+      c: info.c,
+      f: f,
+      cost: instructionCost(info.c, f),
+      name: e.name,
+      family: e.family,
+      fields: e.fields,
+      body: e.body,
+    ));
+  });
+  out.sort((a, b) => a.c != b.c ? a.c - b.c : a.f - b.f);
+  return out;
 }
